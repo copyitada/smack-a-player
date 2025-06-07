@@ -1,0 +1,13 @@
+[package]
+name = "diaz/gorilla"
+version = "0.1.0"
+registry = "https://github.com/UpliftGames/wally-index"
+realm = "shared"
+
+[dependencies]
+Promise = "evaera/promise@4.0.0"
+Networker = "leifstout/networker@0.2.1"
+CameraShaker = "brittonfischer/camerashaker@0.1.0"
+
+[server-dependencies]
+ProfileStore = "aykut92/profilestore@1.0.21"
