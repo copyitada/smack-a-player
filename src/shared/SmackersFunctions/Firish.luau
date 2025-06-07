@@ -2,13 +2,12 @@ local Debris = game:GetService("Debris")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local ServerStorage = game:GetService("ServerStorage")
 
-local Default = {}
-
 local PunchEffect = ServerStorage:FindFirstChild("HitFX").Punch
 local SmackSound = ServerStorage:FindFirstChild("snap.wav")
 local SwingSound = ServerStorage:FindFirstChild("swing")
 
 local SpecialAttackDebounces = {}
+local Firish = {}
 
 local function RootPartAction(RootPart, CFrame : CFrame, Velocity : Vector3?)
     local Vel = Velocity or Vector3.new(50, 0, 0)
@@ -39,17 +38,17 @@ local function RootPartAction(RootPart, CFrame : CFrame, Velocity : Vector3?)
     Debris:AddItem(LinearVelocity, 0.2)
 end
 
-Default.AttackFunction = function(Player : Player)
+Firish.AttackFunction = function(Player : Player)
     local Character = Player.Character
     local Humanoid = Character:FindFirstChild("Humanoid")
     if not Humanoid then return false end
 
     local Animation = Instance.new("Animation")
     Animation.Name = "SpecialAttack"
-    Animation.AnimationId = "rbxassetid://83138996215724"
+    Animation.AnimationId = "rbxassetid://122032410120318"
 
     local AnimTrack : AnimationTrack  = Humanoid.Animator:LoadAnimation(Animation)
-    local Tool = Player.Backpack:FindFirstChild("Default") or Character:FindFirstChild("Default")
+    local Tool = Player.Backpack:FindFirstChild(script.Name) or Character:FindFirstChild(script.Name)
 
     local TouchConnection
     local PrimaryPart = Tool:FindFirstChild("EvadeTaxes")
@@ -64,7 +63,7 @@ Default.AttackFunction = function(Player : Player)
     if SpecialAttackDebounces[Humanoid] then return false end
     SpecialAttackDebounces[Humanoid] = true
 
-    task.delay(10, function()
+    task.delay(15, function()
         SpecialAttackDebounces[Humanoid] = nil
     end)
 
@@ -94,29 +93,7 @@ Default.AttackFunction = function(Player : Player)
         Params.FilterDescendantsInstances = {VictimCharacter}
         Params.FilterType = Enum.RaycastFilterType.Exclude
 
-        local Results = workspace:Raycast(VictimCharacter:GetPivot().Position + Vector3.new(0, 10, 0), Vector3.new(0, -999999, 0), Params)
-
-        for _ = 1, 50 do
-            local Debree : BasePart = Instance.new("Part")
-            Debree.Size = Vector3.new(.7, .7, .7)
-            Debree.Rotation = Vector3.new(math.random(-180, 180), math.random(-180, 180), math.random(-180, 180))
-            Debree.Anchored = false
-            Debree.Position = VictimCharacter:GetPivot().Position + Vector3.new(math.random(-2, 2), 10, math.random(-2, 2))
-            Debree.Parent = workspace.VFX.Debris
-
-            if Results then
-                Debree.Material = Results.Material
-                Debree.Color = Results.Instance.Color
-            else
-                Debree.Material = Enum.Material.Neon
-                Debree.Color = Color3.fromRGB(255,255,255)
-            end
-
-            Debree:ApplyImpulse(Vector3.new(math.random(-5, 5), 20, math.random(-5, 5)))
-            Debris:AddItem(Debree, 10)
-        end
-
-        VictimHumanoid:TakeDamage(25)
+        VictimHumanoid:TakeDamage(10)
 
         local Pivot : CFrame = Character:FindFirstChild("HumanoidRootPart").CFrame
         RootPartAction(VictimCharacter:FindFirstChild("HumanoidRootPart"), Pivot)
@@ -146,4 +123,4 @@ Default.AttackFunction = function(Player : Player)
     return true
 end
 
-return Default
+return Firish

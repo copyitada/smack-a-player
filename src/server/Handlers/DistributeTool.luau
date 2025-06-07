@@ -1,5 +1,4 @@
 workspace.AnimationRigs:Destroy()
-local _CraterModule = require(script.Parent.Parent.Modules.CraterModule)
 
 local Debris = game:GetService("Debris")
 local Players = game:GetService("Players")

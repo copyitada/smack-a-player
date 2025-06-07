@@ -23,6 +23,7 @@ local Humanoid = Player.Character.Humanoid
 local Head = Player.Character.Head
 local RootPart = Player.Character.HumanoidRootPart
 
+local Loaded = Player:WaitForChild("Values"):WaitForChild("Loaded")
 local PlayerUI = Player.PlayerGui
 
 local MoneyUI = PlayerUI.ToolUI.Money
@@ -113,7 +114,13 @@ function InputController.Init()
         Networker.client.new("ToolInputs", InputController):fire("Block", Blocking)
     end, true, Enum.KeyCode.NumLock)
 
+    if not Loaded.Value then
+        MoneyUI.Text = "Fetching profile..."
+    end
+
     Player:WaitForChild("leaderstats").Smacks:GetPropertyChangedSignal("Value"):Connect(function()
+        Loaded.Value = true
+
         MoneyUI.Position = MoneyUINewPosition
         MoneyUI.Rotation = MoneyUINewRotation
         MoneyUI.Text = Player.leaderstats.Smacks.Value .. " Smacks"
