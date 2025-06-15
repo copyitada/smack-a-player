@@ -12,7 +12,7 @@ return {
         Attack = {
             AttackName = "Too Hot",
             AttackDuration = 2,
-            AttackDebounce = 10,
+            AttackDebounce = 15,
         }
     },
 }

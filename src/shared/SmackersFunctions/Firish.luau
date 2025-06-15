@@ -53,6 +53,8 @@ Firish.AttackFunction = function(Player : Player)
     local TouchConnection
     local PrimaryPart = Tool:FindFirstChild("EvadeTaxes")
 
+    local _FirishParticle : ParticleEmitter = PrimaryPart:FindFirstChild("ParticleEmitter")
+
     for _, Trail in PrimaryPart:GetChildren() do
         if Trail:IsA("Trail") then
             Trail.Transparency = NumberSequence.new(.7, .7)
@@ -93,7 +95,27 @@ Firish.AttackFunction = function(Player : Player)
         Params.FilterDescendantsInstances = {VictimCharacter}
         Params.FilterType = Enum.RaycastFilterType.Exclude
 
-        VictimHumanoid:TakeDamage(10)
+        VictimHumanoid:TakeDamage(5)
+        task.spawn(function()
+            local Highlight : Highlight = Instance.new("Highlight")
+            Highlight.OutlineTransparency = 1
+            Highlight.FillColor = Color3.fromRGB(255, 115, 0)
+            Highlight.FillTransparency = 0.3
+
+            Highlight.Parent = VictimCharacter
+            Highlight.Adornee = VictimCharacter
+            
+            --local Particle = FirishParticle:Clone()
+            --Particle.Parent = VictimCharacter.HumanoidRootPart.RootAttachment
+
+            for _ = 1, 8 do
+                task.wait(1)
+                VictimHumanoid:TakeDamage(3)
+            end
+
+            --Particle:Destroy()
+            Highlight:Destroy()
+        end)
 
         local Pivot : CFrame = Character:FindFirstChild("HumanoidRootPart").CFrame
         RootPartAction(VictimCharacter:FindFirstChild("HumanoidRootPart"), Pivot)
