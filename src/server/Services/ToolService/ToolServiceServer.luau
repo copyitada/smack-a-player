@@ -1,6 +1,7 @@
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local ServerScriptService = game:GetService("ServerScriptService")
 local ServerStorage = game:GetService("ServerStorage")
+local ToolServiceUtils = require(ReplicatedStorage.Shared.Services.ToolService.ToolServiceUtils)
 local Smackers = require(ReplicatedStorage.Shared.Smackers)
 local DataManager = require(ServerScriptService.Server.Modules.DataManager)
 local CombatServiceServer = require(ServerScriptService.Server.Services.CombatService.CombatServiceServer)
@@ -135,6 +136,21 @@ function ToolService.EquipSmacker(Player, SmackerName)
     if not Smacker then return end
 
     Smacker.Value = SmackerName
+end
+
+function ToolService.CheckEligibility(Player : Player)
+    local Character = Player.Character
+    if not Character then return end
+
+    if Character:FindFirstChild("Stunned") then return end
+
+    local Humanoid = Character:FindFirstChild("Humanoid")
+    if not Humanoid then return end
+    if Humanoid.Health <= 0 then return end
+
+    if not ToolServiceUtils.IsHoldingTool(Character) then return end
+
+    return true, Humanoid
 end
 
 function ToolService.IsHoldingTool(Character)

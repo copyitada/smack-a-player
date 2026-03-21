@@ -1,5 +1,6 @@
 workspace.AnimationRigs:Destroy()
 
+local EncodingService = game:GetService("EncodingService")
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local ServerScriptService = game:GetService("ServerScriptService")
@@ -9,7 +10,6 @@ local EffectServiceServer = require(ServerScriptService.Server.Services.EffectSe
 local ToolServiceServer = require(ServerScriptService.Server.Services.ToolService.ToolServiceServer)
 local DistributeTool = {}
 local Networker = require(ReplicatedStorage.Packages.Networker)
-local ToolServiceUtils = require(ReplicatedStorage.Shared.Services.ToolService.ToolServiceUtils)
 local ToolDebounces = {}
 
 local RawValues = ServerStorage:FindFirstChild("Values")
@@ -54,17 +54,9 @@ function OnServerInvoke(Player : Player, SmackerName)
 end
 
 function DistributeTool:Block(Player : Player)
-    local Character = Player.Character
-    if not Character then return end
+    local Success, Humanoid = ToolServiceServer.CheckEligibility(Player)
 
-    if Character:FindFirstChild("Stunned") then return end
-
-    local Humanoid = Character:FindFirstChild("Humanoid")
-    if not Humanoid then return end
-    if Humanoid.Health <= 0 then return end
-
-    if not ToolServiceUtils.IsHoldingTool(Character) then return end
-
+    if not Success then return end
     if BlockDebounces[Humanoid] then return end
 
     CombatServiceServer.Parry(Player)
@@ -72,17 +64,9 @@ function DistributeTool:Block(Player : Player)
 end
 
 function DistributeTool:SpecialAttack(Player)
-    local Character = Player.Character
-    if not Character then return end
+    local Success, Humanoid = ToolServiceServer.CheckEligibility(Player)
 
-    if Character:FindFirstChild("Stunned") then return end
-    if Character:FindFirstChild("Blocking") then return end
-
-    local Humanoid = Character:FindFirstChild("Humanoid")
-    if not Humanoid then return end
-    if Humanoid.Health <= 0 then return end
-
-    if not ToolServiceUtils.IsHoldingTool(Character) then return end
+    if not Success then return end
     if ToolDebounces[Humanoid] then return end
 
     local SmackerName = Player:FindFirstChild("Values"):FindFirstChild("SmackerName")
