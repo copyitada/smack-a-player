@@ -2,15 +2,16 @@ local Debris = game:GetService("Debris")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local ServerStorage = game:GetService("ServerStorage")
 
--- script update
-
-local Default = {}
+-- hi
 
 local PunchEffect = ServerStorage:FindFirstChild("HitFX").Punch
 local SmackSound = ServerStorage:FindFirstChild("snap.wav")
 local SwingSound = ServerStorage:FindFirstChild("swing")
 
+local IceBrick : Part = ServerStorage:FindFirstChild("IceBrick")
+
 local SpecialAttackDebounces = {}
+local Ice = {}
 
 local function RootPartAction(RootPart, CFrame : CFrame, Velocity : Vector3?)
     local Vel = Velocity or Vector3.new(50, 0, 0)
@@ -41,17 +42,19 @@ local function RootPartAction(RootPart, CFrame : CFrame, Velocity : Vector3?)
     Debris:AddItem(LinearVelocity, 0.2)
 end
 
-Default.AttackFunction = function(Player : Player)
+Ice.AttackFunction = function(Player : Player)
+    print("ice ability intiated")
+
     local Character = Player.Character
     local Humanoid = Character:FindFirstChild("Humanoid")
     if not Humanoid then return false end
 
     local Animation = Instance.new("Animation")
     Animation.Name = "SpecialAttack"
-    Animation.AnimationId = "rbxassetid://83138996215724"
+    Animation.AnimationId = "rbxassetid://122032410120318"
 
     local AnimTrack : AnimationTrack  = Humanoid.Animator:LoadAnimation(Animation)
-    local Tool = Player.Backpack:FindFirstChild("Default") or Character:FindFirstChild("Default")
+    local Tool = Player.Backpack:FindFirstChild(script.Name) or Character:FindFirstChild(script.Name)
 
     local TouchConnection
     local PrimaryPart = Tool:FindFirstChild("EvadeTaxes")
@@ -62,11 +65,13 @@ Default.AttackFunction = function(Player : Player)
         end
     end
 
+    print("so far so good")
+
     local HumanoidDebounce = {}
     if SpecialAttackDebounces[Humanoid] then return false end
     SpecialAttackDebounces[Humanoid] = true
 
-    task.delay(10, function()
+    task.delay(15, function()
         SpecialAttackDebounces[Humanoid] = nil
     end)
 
@@ -78,16 +83,24 @@ Default.AttackFunction = function(Player : Player)
     AnimTrack:GetMarkerReachedSignal("Hit"):Wait()
 
     TouchConnection = PrimaryPart.Touched:Connect(function(Hit)
+        print("player touched")
         local VictimHumanoid = Hit.Parent:FindFirstChild("Humanoid")
+
         if not VictimHumanoid then return end
             local VictimCharacter = VictimHumanoid.Parent
         if VictimCharacter.Name == Character.Name then return end
+
+        local VictimRootPart = VictimHumanoid.Parent:FindFirstChild("HumanoidRootPart")
+        if not VictimRootPart then return end
+
         VictimCharacter.RagdollTrigger.Value = true
 
         if HumanoidDebounce[VictimHumanoid] then
             warn("------------ " .. VictimCharacter.Name .. " already hit! ---------------")
             return
         end
+
+        print("player touchable")
         
         HumanoidDebounce[VictimHumanoid] = true
         ReplicatedStorage.Remotes.ShakeOnce:FireClient(Player, 10, 20, .4, 1.1)
@@ -96,32 +109,51 @@ Default.AttackFunction = function(Player : Player)
         Params.FilterDescendantsInstances = {VictimCharacter}
         Params.FilterType = Enum.RaycastFilterType.Exclude
 
-        local Results = workspace:Raycast(VictimCharacter:GetPivot().Position + Vector3.new(0, 10, 0), Vector3.new(0, -999999, 0), Params)
+        VictimHumanoid:TakeDamage(4)
+        task.spawn(function()
+            print("ability touched initiated")
 
-        for _ = 1, 50 do
-            local Debree : BasePart = Instance.new("Part")
-            Debree.Size = Vector3.new(.7, .7, .7)
-            Debree.Rotation = Vector3.new(math.random(-180, 180), math.random(-180, 180), math.random(-180, 180))
-            Debree.Anchored = false
-            Debree.Position = VictimCharacter:GetPivot().Position + Vector3.new(math.random(-2, 2), 10, math.random(-2, 2))
-            Debree.Parent = workspace.VFX.Debris
+            --[[
+            local Highlight : Highlight = Instance.new("Highlight")
+            Highlight.OutlineTransparency = 1
+            Highlight.FillColor = Color3.fromRGB(102, 252, 255)
+            Highlight.FillTransparency = 1
 
-            if Results then
-                Debree.Material = Results.Material
-                Debree.Color = Results.Instance.Color
-            else
-                Debree.Material = Enum.Material.Neon
-                Debree.Color = Color3.fromRGB(255,255,255)
+            Highlight.Parent = VictimCharacter
+            Highlight.Adornee = VictimCharacter
+            
+            for i = 1, 10 do
+                Highlight.FillTransparency -= 7/10
+                task.wait(.05)
             end
+            ]]
+            task.wait(.5)
 
-            Debree:ApplyImpulse(Vector3.new(math.random(-5, 5), 20, math.random(-5, 5)))
-            Debris:AddItem(Debree, 10)
-        end
+            local Stunned = Instance.new("BoolValue")
+            Stunned.Name = "Stunned"
+            Stunned.Parent = VictimCharacter
 
-        VictimHumanoid:TakeDamage(35)
+            local IceClone = IceBrick:Clone()
+            IceClone.CFrame = VictimRootPart.CFrame
+            IceClone.Parent = VictimRootPart.RootAttachment
+
+            local WeldConstraint = Instance.new("WeldConstraint")
+            WeldConstraint.Part0 = IceClone
+            WeldConstraint.Part1 = VictimRootPart
+
+            WeldConstraint.Parent = IceClone
+
+            Debris:AddItem(IceClone, 5)
+            Debris:AddItem(Stunned, 5)
+            -- Highlight:Destroy()
+
+            print("ability touched complete")
+        end)
 
         local Pivot : CFrame = Character:FindFirstChild("HumanoidRootPart").CFrame
         RootPartAction(VictimCharacter:FindFirstChild("HumanoidRootPart"), Pivot)
+
+        print("ability done")
 
         task.delay(2.5, function()
             VictimCharacter.RagdollTrigger.Value = false
@@ -148,4 +180,4 @@ Default.AttackFunction = function(Player : Player)
     return true
 end
 
-return Default
+return Ice

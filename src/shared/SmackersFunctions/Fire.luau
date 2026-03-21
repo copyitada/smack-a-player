@@ -2,15 +2,12 @@ local Debris = game:GetService("Debris")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local ServerStorage = game:GetService("ServerStorage")
 
--- script update
-
-local Default = {}
-
 local PunchEffect = ServerStorage:FindFirstChild("HitFX").Punch
 local SmackSound = ServerStorage:FindFirstChild("snap.wav")
 local SwingSound = ServerStorage:FindFirstChild("swing")
 
 local SpecialAttackDebounces = {}
+local Firish = {}
 
 local function RootPartAction(RootPart, CFrame : CFrame, Velocity : Vector3?)
     local Vel = Velocity or Vector3.new(50, 0, 0)
@@ -41,20 +38,22 @@ local function RootPartAction(RootPart, CFrame : CFrame, Velocity : Vector3?)
     Debris:AddItem(LinearVelocity, 0.2)
 end
 
-Default.AttackFunction = function(Player : Player)
+Firish.AttackFunction = function(Player : Player)
     local Character = Player.Character
     local Humanoid = Character:FindFirstChild("Humanoid")
     if not Humanoid then return false end
 
     local Animation = Instance.new("Animation")
     Animation.Name = "SpecialAttack"
-    Animation.AnimationId = "rbxassetid://83138996215724"
+    Animation.AnimationId = "rbxassetid://122032410120318"
 
     local AnimTrack : AnimationTrack  = Humanoid.Animator:LoadAnimation(Animation)
-    local Tool = Player.Backpack:FindFirstChild("Default") or Character:FindFirstChild("Default")
+    local Tool = Player.Backpack:FindFirstChild(script.Name) or Character:FindFirstChild(script.Name)
 
     local TouchConnection
     local PrimaryPart = Tool:FindFirstChild("EvadeTaxes")
+
+    local _FirishParticle : ParticleEmitter = PrimaryPart:FindFirstChild("ParticleEmitter")
 
     for _, Trail in PrimaryPart:GetChildren() do
         if Trail:IsA("Trail") then
@@ -66,7 +65,7 @@ Default.AttackFunction = function(Player : Player)
     if SpecialAttackDebounces[Humanoid] then return false end
     SpecialAttackDebounces[Humanoid] = true
 
-    task.delay(10, function()
+    task.delay(15, function()
         SpecialAttackDebounces[Humanoid] = nil
     end)
 
@@ -96,29 +95,27 @@ Default.AttackFunction = function(Player : Player)
         Params.FilterDescendantsInstances = {VictimCharacter}
         Params.FilterType = Enum.RaycastFilterType.Exclude
 
-        local Results = workspace:Raycast(VictimCharacter:GetPivot().Position + Vector3.new(0, 10, 0), Vector3.new(0, -999999, 0), Params)
+        VictimHumanoid:TakeDamage(15)
+        task.spawn(function()
+            local Highlight : Highlight = Instance.new("Highlight")
+            Highlight.OutlineTransparency = 1
+            Highlight.FillColor = Color3.fromRGB(255, 115, 0)
+            Highlight.FillTransparency = 0.3
 
-        for _ = 1, 50 do
-            local Debree : BasePart = Instance.new("Part")
-            Debree.Size = Vector3.new(.7, .7, .7)
-            Debree.Rotation = Vector3.new(math.random(-180, 180), math.random(-180, 180), math.random(-180, 180))
-            Debree.Anchored = false
-            Debree.Position = VictimCharacter:GetPivot().Position + Vector3.new(math.random(-2, 2), 10, math.random(-2, 2))
-            Debree.Parent = workspace.VFX.Debris
+            Highlight.Parent = VictimCharacter
+            Highlight.Adornee = VictimCharacter
+            
+            --local Particle = FirishParticle:Clone()
+            --Particle.Parent = VictimCharacter.HumanoidRootPart.RootAttachment
 
-            if Results then
-                Debree.Material = Results.Material
-                Debree.Color = Results.Instance.Color
-            else
-                Debree.Material = Enum.Material.Neon
-                Debree.Color = Color3.fromRGB(255,255,255)
+            for _ = 1, 8 do
+                task.wait(1)
+                VictimHumanoid:TakeDamage(4)
             end
 
-            Debree:ApplyImpulse(Vector3.new(math.random(-5, 5), 20, math.random(-5, 5)))
-            Debris:AddItem(Debree, 10)
-        end
-
-        VictimHumanoid:TakeDamage(35)
+            --Particle:Destroy()
+            Highlight:Destroy()
+        end)
 
         local Pivot : CFrame = Character:FindFirstChild("HumanoidRootPart").CFrame
         RootPartAction(VictimCharacter:FindFirstChild("HumanoidRootPart"), Pivot)
@@ -148,4 +145,4 @@ Default.AttackFunction = function(Player : Player)
     return true
 end
 
-return Default
+return Firish

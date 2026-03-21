@@ -7,23 +7,31 @@ local DataManager = require(ServerScriptService.Server.Modules.DataManager)
 local ProfileStore = require(ReplicatedStorage.ServerPackages.ProfileStore)
 local DataTemplate = require(ReplicatedStorage.Shared.DataTemplate)
 
--- The PROFILE_TEMPLATE table is what new profile "Profile.Data" will default to:
+-- The PROFILE_TEMPLATE table is what new Profile "Profile.Data" will default to:
 local PROFILE_TEMPLATE = DataTemplate
 
 local PlayerStore = ProfileStore.New("PlayerStore", PROFILE_TEMPLATE)
 local Profiles: {[Player]: typeof(PlayerStore:StartSessionAsync())} = DataManager.Profiles
 
 local function Initialize(Player : Player, Profile: typeof(PlayerStore:StartSessionAsync()))
-    local leaderstats = Player:FindFirstChild("leaderstats")
+   local leaderstats = Player:FindFirstChild("leaderstats")
+   local Values = Player:FindFirstChild("Values")
+   local SmackerName = Values:FindFirstChild("SmackerName")
 
-    if leaderstats then
-        leaderstats.Smacks.Value = Profile.Data.Smacks
-    end
+
+   print(Profile.Data)
+
+   if leaderstats then
+      leaderstats.Smacks.Value = Profile.Data.Smacks
+   end
+   if SmackerName then
+      SmackerName.Value = Profile.Data.SmackerName  
+   end
 end
 
 local function PlayerAdded(Player)
 
-   -- Start a profile session for this player's data:
+   -- Start a Profile session for this player's data:
 
    local Profile = PlayerStore:StartSessionAsync(`{Player.UserId}`, {
       Cancel = function()
@@ -31,7 +39,7 @@ local function PlayerAdded(Player)
       end,
    })
 
-   -- Handling new profile session or failure to start it:
+   -- Handling new Profile session or failure to start it:
 
    if Profile ~= nil then
 
@@ -49,7 +57,7 @@ local function PlayerAdded(Player)
          
         Initialize(Player, Profile)
       else
-         -- The player has left before the profile session started
+         -- The player has left before the Profile session started
          Profile:EndSession()
       end
 
@@ -68,9 +76,9 @@ end
 Players.PlayerAdded:Connect(PlayerAdded)
 
 Players.PlayerRemoving:Connect(function(player)
-   local profile = Profiles[player]
-   if profile ~= nil then
-      profile:EndSession()
+   local Profile = Profiles[player]
+   if Profile ~= nil then
+      Profile:EndSession()
    end
 end)
 

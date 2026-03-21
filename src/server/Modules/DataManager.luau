@@ -13,4 +13,18 @@ function DataManager.AddSmacks(Player)
     end
 end
 
+function DataManager.SetSmacker(Player, SmackerName)
+    local Profile = DataManager.Profiles[Player]
+    if not Profile then return end
+
+    Profile.Data.SmackerName = SmackerName
+end
+
+function DataManager.GetSmacker(Player)
+    local Profile = DataManager.Profiles[Player]
+    if not Profile then return end
+
+    return Profile.Data.SmackerName
+end
+
 return DataManager
