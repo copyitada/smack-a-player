@@ -5,10 +5,12 @@ local RunService = game:GetService("RunService")
 local ServerStorage = game:GetService("ServerStorage")
 local Teams = game:GetService("Teams")
 
+local RoundServiceUtils = require(ReplicatedStorage.Shared.Services.RoundService.RoundServiceUtils)
+local DestroyType = require(ReplicatedStorage.Shared.Utilities.DestroyType)
+local RoundServiceServer = {}
+
 local Timer : IntValue = ReplicatedStorage.Value.Time
 local Caption : StringValue = ReplicatedStorage.Value.Caption
-
-local DestroyType = require(ReplicatedStorage.Shared.Utilities.DestroyType)
 
 local Podium = workspace.SpawnLocations.Lobby.Podium
 local PodiumCharacters = {
@@ -17,43 +19,16 @@ local PodiumCharacters = {
     Podium.Three
 }
 
-local REQUIRED_PLAYERS = RunService:IsStudio() and 1 or 2
-local INTERMISSION_TIMER = RunService:IsStudio() and 5 or 30
-local ROUND_DURATION = RunService:IsStudio() and 15 or 150
+local Settings = RoundServiceUtils.Settings
+local ROUND_DURATION = RunService:IsStudio() and Settings.ROUND_DURATION.STUDIO or Settings.ROUND_DURATION.PUBLIC
+local INTERMISSION_TIMER = RunService:IsStudio() and Settings.INTERMISSION_TIMER.STUDIO or Settings.INTERMISSION_TIMER.PUBLIC
 
 local FirstIteration = true
-local RoundSystem = {}
 
-local function PlayerAdded(Player : Player)
-    local PlayingTeam : Team = Teams.Playing
-    if #PlayingTeam:GetPlayers() > 0 then
-        Player.Team = Teams.Playing
-    else
-        Player.Team = Teams.Lobby
-    end
-end
-
-local function ActionToAllPlayers(func)
-    for _, Player in Players:GetPlayers() do
-        func(Player)
-    end
-end
-
-Players.PlayerAdded:Connect(PlayerAdded)
-
-local function CheckPlayers()
-    if #Players:GetPlayers() < REQUIRED_PLAYERS then
-        Caption.Value = "Looks like we don't have enough players!? We need someone to join to start the game!"
-        repeat task.wait(1)
-            Timer.Value += 1
-        until #Players:GetPlayers() >= REQUIRED_PLAYERS
-    end
-end
-
-local function DisplayWinners()
+function RoundServiceServer.DisplayWinners()
     local PlayerSmackerStats = {}
 
-    ActionToAllPlayers(function(Player : Player)
+    RoundServiceUtils.ActionToAllPlayers(function(Player : Player)
         Player.Team = Teams.Lobby
         Player:LoadCharacterAsync()
 
@@ -82,7 +57,7 @@ local function DisplayWinners()
                 NewRig.Name = if i == 1 then "One" elseif i == 2 then "Two" else "Three"
 
                 NewRig.Parent = PodiumCharacters[i].Parent
-                NewRig:PivotTo(PodiumCharacters[i]:GetPivot())
+                NewRig:PivotTo(PodiumCharacters[i]:GetPivot() + Vector3.new(0, 3, 0))
 
                 NewRig.Humanoid.DisplayDistanceType = Enum.HumanoidDisplayDistanceType.None
 
@@ -102,38 +77,33 @@ local function DisplayWinners()
 
                 PodiumCharacters[i]:Destroy()
                 PodiumCharacters[i] = NewRig
-                
-                --[[
-                DestroyType("Shirt", Humanoid.Parent)
-                DestroyType("Accessory", Humanoid.Parent)
-                DestroyType("Body Colors", Humanoid.Parent)
+            else
+                local NewRig = ServerStorage.Placeholder:Clone()
+                NewRig.Name = if i == 1 then "One" elseif i == 2 then "Two" else "Three"
+                NewRig.Parent = PodiumCharacters[i].Parent
 
-                for _, Object in Humanoid.Parent:GetDescendants() do
-                    if not Object:IsA("BillboardGui") then continue end
+                NewRig:PivotTo(PodiumCharacters[i]:GetPivot() + Vector3.new(0, 3, 0))
 
-                    Object.TextLabel.Text = "?"
-                end
-
-                local BodyColors = ServerStorage["Body Colors"]:Clone()
-                BodyColors.Parent = Humanoid.Parent
-                ]]
+                PodiumCharacters[i]:Destroy()
+                PodiumCharacters[i] = NewRig
             end
         end
     end
 end
 
-local function Initialize()
+function RoundServiceServer.Start() 
     if not FirstIteration then
-        DisplayWinners() 
+        RoundServiceServer.DisplayWinners() 
     end
 
-    CheckPlayers()
+    RoundServiceUtils.CheckPlayers()
 
     Caption.Value = "Intermission..."
+
     for i = INTERMISSION_TIMER, 0, -1 do
         task.wait(1)
 
-        CheckPlayers()
+        RoundServiceUtils.CheckPlayers()
         Timer.Value = i
     end
 
@@ -149,7 +119,7 @@ local function Initialize()
 
     task.wait(1)
 
-    ActionToAllPlayers(function(Player : Player)
+    RoundServiceUtils.ActionToAllPlayers(function(Player : Player)
         Player.Team = Teams.Playing
         Player:LoadCharacterAsync()
 
@@ -182,7 +152,7 @@ local function Initialize()
         Timer.Value = i/10
     end
 
-    ActionToAllPlayers(function(Player : Player)
+    RoundServiceUtils.ActionToAllPlayers(function(Player : Player)
         local Character = Player.Character
         local RootPart = Character.PrimaryPart
         RootPart.Anchored = true
@@ -204,10 +174,4 @@ local function Initialize()
     FirstIteration = false
 end
 
-function RoundSystem.Init()
-    while true do
-        Initialize()
-    end
-end
-
-return RoundSystem
+return RoundServiceServer

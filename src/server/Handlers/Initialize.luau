@@ -1,12 +1,12 @@
 workspace.AnimationRigs:Destroy()
 
-local EncodingService = game:GetService("EncodingService")
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local ServerScriptService = game:GetService("ServerScriptService")
 local ServerStorage = game:GetService("ServerStorage")
 local CombatServiceServer = require(ServerScriptService.Server.Services.CombatService.CombatServiceServer)
 local EffectServiceServer = require(ServerScriptService.Server.Services.EffectService.EffectServiceServer)
+local RoundServiceServer = require(ServerScriptService.Server.Services.RoundService.RoundServiceServer)
 local ToolServiceServer = require(ServerScriptService.Server.Services.ToolService.ToolServiceServer)
 local DistributeTool = {}
 local Networker = require(ReplicatedStorage.Packages.Networker)
@@ -97,6 +97,12 @@ function DistributeTool.Init()
     for _, Player in Players:GetPlayers() do
         PlayerAdded(Player)
     end
+
+    task.spawn(function()
+        while true do
+            RoundServiceServer.Start()
+        end
+    end)
 end
 
 return DistributeTool

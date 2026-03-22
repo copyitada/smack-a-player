@@ -84,11 +84,7 @@ function CombatServiceServer.Parry(Player : Player, Block : boolean?)
                 else
                     Blocking:Destroy()
 
-                    local Stunned = Instance.new("BoolValue")
-                    Stunned.Name = "Stunned"
-                    Stunned.Parent = Character
-
-                    Debris:AddItem(Stunned, 2)
+                    CombatServiceServer.Stun(Character, 2)
 
                     task.wait(2)
                     Humanoid.WalkSpeed = 16
@@ -185,20 +181,23 @@ function CombatServiceServer.Parried(Player : Player, Hit, SmackAnimationTrack :
 
     SmackAnimationTrack:Stop()
 
-    local Stunned = Instance.new("BoolValue") :: BoolValue
-    Stunned.Name = "Stunned"
-    Stunned.Parent = Character
-
+    CombatServiceServer.Stun(Character, 4)
     Humanoid.WalkSpeed = 0
 
     task.delay(4, function()
-        Stunned:Destroy()
-                    
         ParryTrack:Stop()
         Humanoid.WalkSpeed = 16
     end)
 
     return
+end
+
+function CombatServiceServer.Stun(Character : Model, Duration : number)
+    local Stunned = Instance.new("BoolValue") :: BoolValue
+    Stunned.Name = "Stunned"
+    Stunned.Parent = Character
+
+    Debris:AddItem(Stunned, Duration)
 end
 
 return CombatServiceServer
