@@ -22,7 +22,9 @@ local RequiredPlayers = RunService:IsStudio() and SettingsRequiredPlayers.STUDIO
 
 function RoundServiceUtils.ActionToAllPlayers(func)
     for _, Player in Players:GetPlayers() do
-        func(Player)
+        pcall(function()
+            func(Player)  
+        end)
     end
 end
 

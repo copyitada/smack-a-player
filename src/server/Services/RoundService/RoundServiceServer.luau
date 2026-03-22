@@ -1,10 +1,11 @@
-local Debris = game:GetService("Debris")
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local RunService = game:GetService("RunService")
+local ServerScriptService = game:GetService("ServerScriptService")
 local ServerStorage = game:GetService("ServerStorage")
 local Teams = game:GetService("Teams")
 
+local CombatServiceServer = require(ServerScriptService.Server.Services.CombatService.CombatServiceServer)
 local RoundServiceUtils = require(ReplicatedStorage.Shared.Services.RoundService.RoundServiceUtils)
 local DestroyType = require(ReplicatedStorage.Shared.Utilities.DestroyType)
 local RoundServiceServer = {}
@@ -96,16 +97,22 @@ function RoundServiceServer.Start()
         RoundServiceServer.DisplayWinners() 
     end
 
-    RoundServiceUtils.CheckPlayers()
+    if not RoundServiceUtils.CheckPlayers() then
+        repeat task.wait(1)
+            Caption.Value = "Oof! One more person to start the game!"
+        until RoundServiceUtils.CheckPlayers()
+    end
 
     Caption.Value = "Intermission..."
 
     for i = INTERMISSION_TIMER, 0, -1 do
-        task.wait(1)
+        if not RoundServiceUtils.CheckPlayers() then return end
 
-        RoundServiceUtils.CheckPlayers()
+        task.wait(1)
         Timer.Value = i
     end
+
+    if not RoundServiceUtils.CheckPlayers() then return end
 
     Caption.Value = "..."
 
@@ -140,31 +147,27 @@ function RoundServiceServer.Start()
             Humanoid.WalkSpeed = 0
         end
 
-        local Stunned = Instance.new("BoolValue")
-        Stunned.Parent = Character
-        Stunned.Name = "Stunned"
-
-        Debris:AddItem(Stunned, 2)
+        CombatServiceServer.Stun(Character, 2)
     end)
 
     task.wait(2)
 
     Caption.Value = "Game ends in:"
     for i = ROUND_DURATION * 10, 1, -1 do
+        if not RoundServiceUtils.CheckPlayers() then return end
+
         task.wait(.1)
         Timer.Value = i/10
     end
+
+    if not RoundServiceUtils.CheckPlayers() then return end
 
     RoundServiceUtils.ActionToAllPlayers(function(Player : Player)
         local Character = Player.Character
         local RootPart = Character.PrimaryPart
         RootPart.Anchored = true
 
-        local Stunned = Instance.new("BoolValue")
-        Stunned.Parent = Character
-        Stunned.Name = "Stunned"
-
-        Debris:AddItem(Stunned, 5)
+        CombatServiceServer.Stun(Character, 5)
         ReplicatedStorage.Remotes.PlaySound:FireClient(Player, ReplicatedStorage["victory.wav"])
     end)
 

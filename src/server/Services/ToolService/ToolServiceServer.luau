@@ -143,6 +143,7 @@ function ToolService.CheckEligibility(Player : Player)
     if not Character then return end
 
     if Character:FindFirstChild("Stunned") then return end
+    if Character:FindFirstChild("Blocking") then return end
 
     local Humanoid = Character:FindFirstChild("Humanoid")
     if not Humanoid then return end

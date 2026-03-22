@@ -4,6 +4,7 @@ local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local ServerScriptService = game:GetService("ServerScriptService")
 local ServerStorage = game:GetService("ServerStorage")
+local Teams = game:GetService("Teams")
 local CombatServiceServer = require(ServerScriptService.Server.Services.CombatService.CombatServiceServer)
 local EffectServiceServer = require(ServerScriptService.Server.Services.EffectService.EffectServiceServer)
 local RoundServiceServer = require(ServerScriptService.Server.Services.RoundService.RoundServiceServer)
@@ -24,6 +25,8 @@ local function PlayerAdded(Player : Player)
 
     local Values = Player:WaitForChild("Values")
     local SmackerName : StringValue = Values:WaitForChild("SmackerName")
+
+    Player.Team = Teams.Lobby
 
     Player.CharacterAdded:Connect(function(Character)
         task.wait()

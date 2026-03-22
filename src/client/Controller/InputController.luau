@@ -61,9 +61,7 @@ local function GetSmackerInfo() : Smacker
     return Information
 end
 
-local function SpecialAttack(InputState)
-    if InputState ~= Enum.UserInputState.Begin then return end
-
+local function SpecialAttack()
     local CooldownList = PlayerUI.ToolUI.CooldownList
     local CooldownBarRaw = ReplicatedStorage:FindFirstChild("CooldownBar")
 
@@ -93,9 +91,7 @@ local function SpecialAttack(InputState)
     end
 end
 
-local function Block(_, InputState)
-    if InputState ~= Enum.UserInputState.Begin then return end
-
+local function Block()
     local CooldownList = PlayerUI.ToolUI.CooldownList
     local CooldownBarRaw = ReplicatedStorage:FindFirstChild("CooldownBar")
 
@@ -155,30 +151,6 @@ local function InputEnded(Input)
 end
 
 local function RenderStepped()
-	if Humanoid.Health > 0 and Head then
-        Camera.CameraType = Enum.CameraType.Custom
-        Camera.CameraSubject = Humanoid
-
-        Humanoid.CameraOffset = Humanoid.CameraOffset:Lerp((RootPart.CFrame+Vector3.new(0,1.5,0)):pointToObjectSpace(Head.CFrame.p),0.5)
-        LastHeadCFrame = Head.CFrame
-    elseif LastHeadCFrame and LastHeadCFrame.Position then
-        Camera.CameraType = Enum.CameraType.Scriptable
-        local TargetCFrame = CFrame.lookAt(
-            Camera.CFrame.Position,
-            LastHeadCFrame.Position
-        )
-        Camera.CFrame = Camera.CFrame:Lerp(TargetCFrame, 0.1)
-
-        if Head then
-            LastHeadCFrame = Head.CFrame
-        end
-    else
-        Camera.CameraType = Enum.CameraType.Custom
-        if Humanoid then
-            Camera.CameraSubject = Humanoid
-        end
-    end
-
     if not Humanoid.Parent:FindFirstChild("Blocking") and not Humanoid.Parent:FindFirstChild("Stunned") then
         if Running then
             Humanoid.WalkSpeed = 20
@@ -208,23 +180,54 @@ local function RenderStepped()
 
     TimerUI.Text = string.format("[ %02d:%02d ]", TimerValue.Value/60, TimerValue.Value%60)
     CaptionUI.Text = CaptionValue.Value
+
+	if Humanoid.Health > 0 and Head then
+        Camera.CameraType = Enum.CameraType.Custom
+        Camera.CameraSubject = Humanoid
+
+        Humanoid.CameraOffset = Humanoid.CameraOffset:Lerp((RootPart.CFrame+Vector3.new(0,1.5,0)):pointToObjectSpace(Head.CFrame.p),0.5)
+        LastHeadCFrame = Head.CFrame
+    elseif LastHeadCFrame and LastHeadCFrame.Position then
+        Camera.CameraType = Enum.CameraType.Scriptable
+        local TargetCFrame = CFrame.lookAt(
+            Camera.CFrame.Position,
+            LastHeadCFrame.Position
+        )
+        Camera.CFrame = Camera.CFrame:Lerp(TargetCFrame, 0.1)
+
+        if Head then
+            LastHeadCFrame = Head.CFrame
+        end
+    else
+        warn("something bad happened...")
+    end
 end
 
 local function CharacterAdded(NewCharacter)
     Head = NewCharacter:FindFirstChild("Head")
     Humanoid = NewCharacter:FindFirstChild("Humanoid")
     RootPart = NewCharacter:FindFirstChild("HumanoidRootPart")
+
+    if Head then
+        LastHeadCFrame = Head.CFrame
+    end
 end
 
 function InputController.Init()
     UserInputService.InputBegan:Connect(InputBegan)
     UserInputService.InputEnded:Connect(InputEnded)
 
-    ContextActionService:BindAction("Block", Block, true, Enum.KeyCode.NumLock)
+    ContextActionService:BindAction("Block", function(_, InputState)
+        if InputState ~= Enum.UserInputState.Begin then return end
+        Block()
+    end, true, Enum.KeyCode.NumLock)
     ContextActionService:SetTitle("Block", "Block")
     ContextActionService:SetPosition("Block", UDim2.fromScale(.1, .5))
 
-    ContextActionService:BindAction("SpecialAttack", SpecialAttack, true, Enum.KeyCode.KeypadDivide)
+    ContextActionService:BindAction("SpecialAttack", function(_, InputState)
+        if InputState ~= Enum.UserInputState.Begin then return end
+        SpecialAttack()
+    end, true, Enum.KeyCode.KeypadDivide)
     ContextActionService:SetTitle("SpecialAttack", "Ability")
     ContextActionService:SetPosition("SpecialAttack", UDim2.fromScale(.58, -.1))
 
