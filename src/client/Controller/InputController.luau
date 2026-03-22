@@ -22,18 +22,17 @@ local UserInputService = game:GetService("UserInputService")
 task.wait()
 
 local Player = Players.LocalPlayer
-local Character = Player.Character or Player.CharacterAdded:Wait()
-local Head = Character:FindFirstChild("Head")
+local Character = Player.Character
 local LastHeadCFrame
+local Head = Character and Character:FindFirstChild("Head")
+local Humanoid = Character and Character:FindFirstChild("Humanoid")
+local RootPart = Character and Character:FindFirstChild("HumanoidRootPart")
 local Camera = workspace.CurrentCamera
 
 local LastTime = 0
 
-local Humanoid = Character:FindFirstChild("Humanoid")
-local RootPart = Character:FindFirstChild("HumanoidRootPart")
-
 local Loaded = Player:WaitForChild("Values"):WaitForChild("Loaded")
-local ParryCooldown = Player:FindFirstChild("Values"):FindFirstChild("ParryCooldown")
+local ParryCooldown = Player:WaitForChild("Values"):WaitForChild("ParryCooldown")
 local PlayerUI = Player.PlayerGui
 
 local TimerValue : IntValue = ReplicatedStorage.Value.Time
@@ -151,6 +150,8 @@ local function InputEnded(Input)
 end
 
 local function RenderStepped()
+    if not Character or not Humanoid or not Head or not RootPart then return end
+
     if not Humanoid.Parent:FindFirstChild("Blocking") and not Humanoid.Parent:FindFirstChild("Stunned") then
         if Running then
             Humanoid.WalkSpeed = 20
@@ -181,7 +182,7 @@ local function RenderStepped()
     TimerUI.Text = string.format("[ %02d:%02d ]", TimerValue.Value/60, TimerValue.Value%60)
     CaptionUI.Text = CaptionValue.Value
 
-	if Humanoid.Health > 0 and Head then
+	if Humanoid.Health > 0 then
         Camera.CameraType = Enum.CameraType.Custom
         Camera.CameraSubject = Humanoid
 
@@ -194,19 +195,19 @@ local function RenderStepped()
             LastHeadCFrame.Position
         )
         Camera.CFrame = Camera.CFrame:Lerp(TargetCFrame, 0.1)
-
-        if Head then
-            LastHeadCFrame = Head.CFrame
-        end
-    else
-        warn("something bad happened...")
+        LastHeadCFrame = Head.CFrame
     end
 end
 
 local function CharacterAdded(NewCharacter)
-    Head = NewCharacter:FindFirstChild("Head")
-    Humanoid = NewCharacter:FindFirstChild("Humanoid")
-    RootPart = NewCharacter:FindFirstChild("HumanoidRootPart")
+    Character = NewCharacter
+    Head = NewCharacter:WaitForChild("Head")
+    Humanoid = NewCharacter:WaitForChild("Humanoid")
+    RootPart = NewCharacter:WaitForChild("HumanoidRootPart")
+
+    if RenderConnection then
+        RenderConnection:Disconnect() 
+    end
 
     if Head then
         LastHeadCFrame = Head.CFrame
@@ -253,9 +254,6 @@ function InputController.Init()
         LastHeadCFrame = Head.CFrame
     end
 
-    if RenderConnection then
-        RenderConnection:Disconnect() 
-    end
     RenderConnection = RunService.RenderStepped:Connect(RenderStepped)
 
     StarterGui:SetCoreGuiEnabled(Enum.CoreGuiType.Backpack, false)
