@@ -9,11 +9,12 @@ type Smacker = {
 
 local InputController = {}
 
+local RenderConnection
+
 local ContextActionService = game:GetService("ContextActionService")
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local RunService = game:GetService("RunService")
-local ServerStorage = game:GetService("ServerStorage")
 local StarterGui = game:GetService("StarterGui")
 local TweenService = game:GetService("TweenService")
 local UserInputService = game:GetService("UserInputService")
@@ -21,15 +22,15 @@ local UserInputService = game:GetService("UserInputService")
 task.wait()
 
 local Player = Players.LocalPlayer
-local Character = Player.Character
+local Character = Player.Character or Player.CharacterAdded:Wait()
+local Head = Character:FindFirstChild("Head")
+local LastHeadCFrame
 local Camera = workspace.CurrentCamera
 
 local LastTime = 0
 
-local Humanoid = Character.Humanoid
-local Head = Character.Head
-local LastHeadCFrame = Head.CFrame
-local RootPart = Character.HumanoidRootPart
+local Humanoid = Character:FindFirstChild("Humanoid")
+local RootPart = Character:FindFirstChild("HumanoidRootPart")
 
 local Loaded = Player:WaitForChild("Values"):WaitForChild("Loaded")
 local ParryCooldown = Player:FindFirstChild("Values"):FindFirstChild("ParryCooldown")
@@ -50,7 +51,6 @@ local MoneyUINewRotation = 10
 local MoneyUIOldPosition = MoneyUI.Position
 local MoneyUIOldRotation = 0
 
-local Blocking = false
 local Running = false
 
 local Networker = require(ReplicatedStorage.Packages.Networker)
@@ -61,7 +61,9 @@ local function GetSmackerInfo() : Smacker
     return Information
 end
 
-local function SpecialAttack()
+local function SpecialAttack(InputState)
+    if InputState ~= Enum.UserInputState.Begin then return end
+
     local CooldownList = PlayerUI.ToolUI.CooldownList
     local CooldownBarRaw = ReplicatedStorage:FindFirstChild("CooldownBar")
 
@@ -91,7 +93,9 @@ local function SpecialAttack()
     end
 end
 
-local function Block()
+local function Block(_, InputState)
+    if InputState ~= Enum.UserInputState.Begin then return end
+
     local CooldownList = PlayerUI.ToolUI.CooldownList
     local CooldownBarRaw = ReplicatedStorage:FindFirstChild("CooldownBar")
 
@@ -117,8 +121,10 @@ local function Block()
 
         coroutine.resume(ShowCooldown)
 
-        ParryCooldown:GetAttributeChangedSignal("Value"):Connect(function()
+        local Connection
+        Connection = ParryCooldown:GetPropertyChangedSignal("Value"):Connect(function()
             if not ParryCooldown.Value then
+                Connection:Disconnect()
                 coroutine.close(ShowCooldown)
                 CooldownBar:Destroy()
 
@@ -149,21 +155,28 @@ local function InputEnded(Input)
 end
 
 local function RenderStepped()
-	if Humanoid.Health > 0 then
+	if Humanoid.Health > 0 and Head then
         Camera.CameraType = Enum.CameraType.Custom
         Camera.CameraSubject = Humanoid
 
         Humanoid.CameraOffset = Humanoid.CameraOffset:Lerp((RootPart.CFrame+Vector3.new(0,1.5,0)):pointToObjectSpace(Head.CFrame.p),0.5)
         LastHeadCFrame = Head.CFrame
-    else
+    elseif LastHeadCFrame and LastHeadCFrame.Position then
         Camera.CameraType = Enum.CameraType.Scriptable
         local TargetCFrame = CFrame.lookAt(
             Camera.CFrame.Position,
-            LastHeadCFrame.Position                          -- looking at the head
+            LastHeadCFrame.Position
         )
         Camera.CFrame = Camera.CFrame:Lerp(TargetCFrame, 0.1)
 
-        if Head then LastHeadCFrame = Head.CFrame end
+        if Head then
+            LastHeadCFrame = Head.CFrame
+        end
+    else
+        Camera.CameraType = Enum.CameraType.Custom
+        if Humanoid then
+            Camera.CameraSubject = Humanoid
+        end
     end
 
     if not Humanoid.Parent:FindFirstChild("Blocking") and not Humanoid.Parent:FindFirstChild("Stunned") then
@@ -180,7 +193,11 @@ local function RenderStepped()
         TimerUI.TextColor3 = Color3.fromRGB(255,255,255)
     end
 
-    if TimerValue.Value <= 10 then TickingSound.Volume = .5 else TickingSound.Volume = .1 end
+    if TimerValue.Value <= 10 then
+        TickingSound.Volume = .5
+    else
+        TickingSound.Volume = .1
+    end
     if TimerValue.Value ~= LastTime then
         TickingSound:Play()
         if TimerValue.Value <= 3 then
@@ -191,6 +208,12 @@ local function RenderStepped()
 
     TimerUI.Text = string.format("[ %02d:%02d ]", TimerValue.Value/60, TimerValue.Value%60)
     CaptionUI.Text = CaptionValue.Value
+end
+
+local function CharacterAdded(NewCharacter)
+    Head = NewCharacter:FindFirstChild("Head")
+    Humanoid = NewCharacter:FindFirstChild("Humanoid")
+    RootPart = NewCharacter:FindFirstChild("HumanoidRootPart")
 end
 
 function InputController.Init()
@@ -204,6 +227,8 @@ function InputController.Init()
     ContextActionService:BindAction("SpecialAttack", SpecialAttack, true, Enum.KeyCode.KeypadDivide)
     ContextActionService:SetTitle("SpecialAttack", "Ability")
     ContextActionService:SetPosition("SpecialAttack", UDim2.fromScale(.58, -.1))
+
+    Player.CharacterAdded:Connect(CharacterAdded)
 
     if not Loaded.Value then
         MoneyUI.Text = "Fetching profile..."
@@ -221,7 +246,15 @@ function InputController.Init()
         TweenService:Create(MoneyUI, TweenInfo.new(0.5, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), { Position = MoneyUIOldPosition, TextColor3 = Color3.fromRGB(86, 255, 86), Rotation = MoneyUIOldRotation }):Play()
     end)
 
-    RunService.RenderStepped:Connect(RenderStepped)
+    if Head then
+        LastHeadCFrame = Head.CFrame
+    end
+
+    if RenderConnection then
+        RenderConnection:Disconnect() 
+    end
+    RenderConnection = RunService.RenderStepped:Connect(RenderStepped)
+
     StarterGui:SetCoreGuiEnabled(Enum.CoreGuiType.Backpack, false)
 end
 

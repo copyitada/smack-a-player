@@ -132,7 +132,10 @@ function RoundServiceServer.Start()
         end
 
         local Character = Player.Character or Player.CharacterAdded:Wait()
+        task.wait()
+
         local Humanoid = Character:FindFirstChild("Humanoid")
+
         if Humanoid then
             Humanoid.WalkSpeed = 0
         end
