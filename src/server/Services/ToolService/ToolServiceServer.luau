@@ -32,8 +32,7 @@ function ToolService.InitializeSmacker(Player : Player, Tool)
     local TouchConnection
 
     Tool.Activated:Connect(function()
-        if Character:FindFirstChild("Stunned") then return end
-        if Character:FindFirstAncestor("Blocking") then return end
+        if not ToolService.CheckEligibility(Player) then return end
 
         for _, Trail in PrimaryPart:GetChildren() do
             if Trail:IsA("Trail") then

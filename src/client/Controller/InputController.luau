@@ -42,6 +42,9 @@ local TickingSound = ReplicatedStorage["tick"]
 local TimerUI = PlayerUI.ToolUI.Topbar.Timer
 local CaptionUI = PlayerUI.ToolUI.Topbar.Caption
 
+local CooldownList = PlayerUI.ToolUI.CooldownList
+local CooldownBarRaw = ReplicatedStorage:FindFirstChild("CooldownBar")
+
 local MoneyUI = PlayerUI.ToolUI.Money
 
 local MoneyUINewPosition = MoneyUI.Position + UDim2.fromScale(0, -0.05)
@@ -61,9 +64,6 @@ local function GetSmackerInfo() : Smacker
 end
 
 local function SpecialAttack()
-    local CooldownList = PlayerUI.ToolUI.CooldownList
-    local CooldownBarRaw = ReplicatedStorage:FindFirstChild("CooldownBar")
-
     local SmackerInformation = GetSmackerInfo()
     local Results = Networker.client.new("ToolInputs", InputController):fetch("SpecialAttack")
     if Results then
@@ -75,15 +75,24 @@ local function SpecialAttack()
         CooldownBar.Cooldown.Text = `{SmackerInformation.Attack.AttackName} <b>({SmackerInformation.Attack.AttackDebounce}s)</b>`
         CooldownBar.Bar.Size = UDim2.fromScale(1, 1)
 
-        TweenService:Create(CooldownBar.Bar, TweenInfo.new(SmackerInformation.Attack.AttackDebounce + 1.5), {Size = UDim2.fromScale(0, 1)}):Play()
-        for i = SmackerInformation.Attack.AttackDebounce * 10, 1, -1 do
-            CooldownBar.Cooldown.Text = `{SmackerInformation.Attack.AttackName} <b>({i/10}s)</b>`
-            task.wait(0.1)
-        end
+        local ShowCooldown = coroutine.create(function()
+            TweenService:Create(CooldownBar.Bar, TweenInfo.new(SmackerInformation.Attack.AttackDebounce + 1.5), {Size = UDim2.fromScale(0, 1)}):Play()
+            for i = SmackerInformation.Attack.AttackDebounce * 10, 1, -1 do
+                CooldownBar.Cooldown.Text = `{SmackerInformation.Attack.AttackName} <b>({i/10}s)</b>`
+                task.wait(0.1)
+            end
+        end)
 
         CooldownBar:Destroy()
 
-        print("here")
+        local DiedConnection
+        DiedConnection = Humanoid.Died:Connect(function()
+            DiedConnection:Disconnect()
+            CooldownBar:Destroy()
+            
+            coroutine.close(ShowCooldown)
+        end)
+
         Networker.client.new("ToolInputs", InputController):fire("Sparkle", Color3.fromRGB(255, 0, 0))
 
         SpecialAttackDebounce = false
@@ -91,9 +100,6 @@ local function SpecialAttack()
 end
 
 local function Block()
-    local CooldownList = PlayerUI.ToolUI.CooldownList
-    local CooldownBarRaw = ReplicatedStorage:FindFirstChild("CooldownBar")
-
     local Results = Networker.client.new("ToolInputs", InputController):fetch("Block", true)
     if Results then
         local CooldownBar = CooldownBarRaw:Clone()
@@ -115,6 +121,13 @@ local function Block()
         end)
 
         coroutine.resume(ShowCooldown)
+
+        local DiedConnection
+        DiedConnection = Humanoid.Died:Connect(function()
+            DiedConnection:Disconnect()
+            CooldownBar:Destroy()
+            coroutine.close(ShowCooldown)
+        end)
 
         local Connection
         Connection = ParryCooldown:GetPropertyChangedSignal("Value"):Connect(function()
@@ -204,6 +217,12 @@ local function CharacterAdded(NewCharacter)
     Head = NewCharacter:WaitForChild("Head")
     Humanoid = NewCharacter:WaitForChild("Humanoid")
     RootPart = NewCharacter:WaitForChild("HumanoidRootPart")
+
+    for _, Frame in CooldownList:GetChildren() do
+        if Frame:IsA("Frame") then
+            Frame:Destroy()
+        end
+    end
 
     if RenderConnection then
         RenderConnection:Disconnect() 

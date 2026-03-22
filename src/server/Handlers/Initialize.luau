@@ -30,10 +30,6 @@ local function PlayerAdded(Player : Player)
 
     Player.CharacterAdded:Connect(function(Character)
         task.wait()
-        local ToolUI = Player.PlayerGui:FindFirstChild("ToolUI")
-        for _, Frame in ToolUI.CooldownList:GetChildren() do
-            Frame:Destroy()
-        end
 
         if Player.Team.Name == "Lobby" then return end
         local SmackerInstance = ServerStorage.Smackers:FindFirstChild(SmackerName.Value) or ServerStorage.Smackers.Default
