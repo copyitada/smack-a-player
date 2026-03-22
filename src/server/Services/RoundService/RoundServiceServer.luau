@@ -100,6 +100,7 @@ function RoundServiceServer.Start()
     if not RoundServiceUtils.CheckPlayers() then
         repeat task.wait(1)
             Caption.Value = "Oof! One more person to start the game!"
+            Timer.Value += 1
         until RoundServiceUtils.CheckPlayers()
     end
 
