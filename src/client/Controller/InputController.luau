@@ -81,9 +81,12 @@ local function SpecialAttack()
                 CooldownBar.Cooldown.Text = `{SmackerInformation.Attack.AttackName} <b>({i/10}s)</b>`
                 task.wait(0.1)
             end
+
+            CooldownBar:Destroy()
+            Networker.client.new("ToolInputs", InputController):fire("Sparkle", Color3.fromRGB(255, 0, 0))
         end)
 
-        CooldownBar:Destroy()
+        coroutine.resume(ShowCooldown)
 
         local DiedConnection
         DiedConnection = Humanoid.Died:Connect(function()
@@ -92,8 +95,6 @@ local function SpecialAttack()
             
             coroutine.close(ShowCooldown)
         end)
-
-        Networker.client.new("ToolInputs", InputController):fire("Sparkle", Color3.fromRGB(255, 0, 0))
 
         SpecialAttackDebounce = false
     end
@@ -163,6 +164,11 @@ local function InputEnded(Input)
 end
 
 local function RenderStepped()
+    Character = Player.Character
+    Head = Character:FindFirstChild("Head")
+    Humanoid = Character:FindFirstChild("Humanoid")
+    RootPart = Character:FindFirstChild("HumanoidRootPart")
+    
     if not Character or not Humanoid or not Head or not RootPart then return end
 
     if not Humanoid.Parent:FindFirstChild("Blocking") and not Humanoid.Parent:FindFirstChild("Stunned") then

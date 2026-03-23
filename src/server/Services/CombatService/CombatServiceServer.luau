@@ -81,6 +81,7 @@ function CombatServiceServer.Parry(Player : Player, Block : boolean?)
                     BlockDebounces[Humanoid] = nil
 
                     ParryCooldown.Value = false
+                    return true
                 else
                     Blocking:Destroy()
 
@@ -92,7 +93,8 @@ function CombatServiceServer.Parry(Player : Player, Block : boolean?)
                     task.delay(5, function()
                         BlockDebounces[Humanoid] = nil
                         ParryCooldown.Value = false
-                    end)    
+                    end)
+                    return true
                 end
             end)
 

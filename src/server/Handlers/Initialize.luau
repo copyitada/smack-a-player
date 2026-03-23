@@ -15,8 +15,6 @@ local ToolDebounces = {}
 
 local RawValues = ServerStorage:FindFirstChild("Values")
 
-local BlockDebounces = {}
-
 local function PlayerAdded(Player : Player)
     for _, Value in RawValues:GetChildren() do
         local Clone = Value:Clone()
@@ -53,13 +51,12 @@ function OnServerInvoke(Player : Player, SmackerName)
 end
 
 function DistributeTool:Block(Player : Player)
-    local Success, Humanoid = ToolServiceServer.CheckEligibility(Player)
+    local Success, _Humanoid = ToolServiceServer.CheckEligibility(Player)
 
     if not Success then return end
-    if BlockDebounces[Humanoid] then return end
 
-    CombatServiceServer.Parry(Player)
-    return true
+    local CanBlock = CombatServiceServer.Parry(Player)
+    return CanBlock
 end
 
 function DistributeTool:SpecialAttack(Player)
