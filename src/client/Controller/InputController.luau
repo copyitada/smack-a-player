@@ -165,11 +165,13 @@ end
 
 local function RenderStepped()
     Character = Player.Character
+    if not Character then return end
+
     Head = Character:FindFirstChild("Head")
     Humanoid = Character:FindFirstChild("Humanoid")
     RootPart = Character:FindFirstChild("HumanoidRootPart")
     
-    if not Character or not Humanoid or not Head or not RootPart then return end
+    if not Humanoid or not Head or not RootPart then return end
 
     if not Humanoid.Parent:FindFirstChild("Blocking") and not Humanoid.Parent:FindFirstChild("Stunned") then
         if Running then
@@ -223,6 +225,9 @@ local function CharacterAdded(NewCharacter)
     Head = NewCharacter:WaitForChild("Head")
     Humanoid = NewCharacter:WaitForChild("Humanoid")
     RootPart = NewCharacter:WaitForChild("HumanoidRootPart")
+
+    Camera.CameraType = Enum.CameraType.Custom
+    Camera.CameraSubject = Humanoid
 
     for _, Frame in CooldownList:GetChildren() do
         if Frame:IsA("Frame") then
