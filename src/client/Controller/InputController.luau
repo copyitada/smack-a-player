@@ -54,6 +54,7 @@ local MoneyUIOldPosition = MoneyUI.Position
 local MoneyUIOldRotation = 0
 
 local Running = false
+local IsDead = false
 
 local Networker = require(ReplicatedStorage.Packages.Networker)
 local SpecialAttackDebounce = false
@@ -203,13 +204,13 @@ local function RenderStepped()
     TimerUI.Text = string.format("[ %02d:%02d ]", TimerValue.Value/60, TimerValue.Value%60)
     CaptionUI.Text = CaptionValue.Value
 
-	if Humanoid.Health > 0 then
+	if IsDead then
         Camera.CameraType = Enum.CameraType.Custom
         Camera.CameraSubject = Humanoid
 
         Humanoid.CameraOffset = Humanoid.CameraOffset:Lerp((RootPart.CFrame+Vector3.new(0,1.5,0)):pointToObjectSpace(Head.CFrame.p),0.5)
         LastHeadCFrame = Head.CFrame
-    elseif LastHeadCFrame and LastHeadCFrame.Position then
+    elseif LastHeadCFrame then
         Camera.CameraType = Enum.CameraType.Scriptable
         local TargetCFrame = CFrame.lookAt(
             Camera.CFrame.Position,
@@ -228,6 +229,12 @@ local function CharacterAdded(NewCharacter)
 
     Camera.CameraType = Enum.CameraType.Custom
     Camera.CameraSubject = Humanoid
+
+    IsDead = false
+
+    Humanoid.Died:Connect(function()
+        IsDead = true
+    end)
 
     for _, Frame in CooldownList:GetChildren() do
         if Frame:IsA("Frame") then
