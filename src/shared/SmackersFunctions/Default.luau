@@ -1,6 +1,9 @@
 local Debris = game:GetService("Debris")
+local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local ServerScriptService = game:GetService("ServerScriptService")
 local ServerStorage = game:GetService("ServerStorage")
+local ValueServiceServer = require(ServerScriptService.Server.Services.ValueService.ValueServiceServer)
 
 -- script update
 
@@ -80,9 +83,12 @@ Default.AttackFunction = function(Player : Player)
     TouchConnection = PrimaryPart.Touched:Connect(function(Hit)
         local VictimHumanoid = Hit.Parent:FindFirstChild("Humanoid")
         if not VictimHumanoid then return end
-            local VictimCharacter = VictimHumanoid.Parent
+        local VictimCharacter = VictimHumanoid.Parent
+
         if VictimCharacter.Name == Character.Name then return end
         VictimCharacter.RagdollTrigger.Value = true
+
+        local VictimPlayer = Players:GetPlayerFromCharacter(VictimCharacter)
 
         if HumanoidDebounce[VictimHumanoid] then
             warn("------------ " .. VictimCharacter.Name .. " already hit! ---------------")
@@ -119,6 +125,11 @@ Default.AttackFunction = function(Player : Player)
         end
 
         VictimHumanoid:TakeDamage(35)
+
+        if VictimPlayer then
+            local PlayerValues = ValueServiceServer.GetValues(VictimPlayer)
+            PlayerValues.Attacker.Value = Player.Name
+        end
 
         local Pivot : CFrame = Character:FindFirstChild("HumanoidRootPart").CFrame
         RootPartAction(VictimCharacter:FindFirstChild("HumanoidRootPart"), Pivot)

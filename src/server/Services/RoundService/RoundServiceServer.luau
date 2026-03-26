@@ -14,10 +14,17 @@ local Timer : IntValue = ReplicatedStorage.Value.Time
 local Caption : StringValue = ReplicatedStorage.Value.Caption
 
 local Podium = workspace.SpawnLocations.Lobby.Podium
-local PodiumCharacters = {
+local PodiumKills = workspace.SpawnLocations.Lobby.KillsPodium
+
+local PodiumSmackersCharacters = {
     Podium.One,
     Podium.Two,
     Podium.Three
+}
+local PodiumKillsCharacters = {
+    PodiumKills.One,
+    PodiumKills.Two,
+    PodiumKills.Three
 }
 
 local Settings = RoundServiceUtils.Settings
@@ -28,6 +35,7 @@ local FirstIteration = true
 
 function RoundServiceServer.DisplayWinners()
     local PlayerSmackerStats = {}
+    local PlayerKillsStats = {}
 
     RoundServiceUtils.ActionToAllPlayers(function(Player : Player)
         Player.Team = Teams.Lobby
@@ -38,27 +46,31 @@ function RoundServiceServer.DisplayWinners()
 
         if RoundStats then
             table.insert(PlayerSmackerStats, {key = Player, value = RoundStats.Smacks.Value})
+            table.insert(PlayerKillsStats, {key = Player, value = RoundStats.Kills.Value})
         end
     end)
 
     table.sort(PlayerSmackerStats, function(a, b)
         return a.value > b.value
     end)
-
-    print(PlayerSmackerStats)
+    table.sort(PlayerKillsStats, function(a, b)
+        return a.value > b.value
+    end)
 
     for i = 1, 3 do
         local CurrentItem = PlayerSmackerStats[i]
-        if CurrentItem then
-            local Humanoid : Humanoid = PodiumCharacters[i].Humanoid
-            if not Humanoid then continue end
+        local CurrentItemKills = PlayerKillsStats[i]
+        if CurrentItem and CurrentItemKills then
+            local Humanoid : Humanoid = PodiumSmackersCharacters[i].Humanoid
+            local HumanoidKills : Humanoid = PodiumKillsCharacters[i].Humanoid
+            if not Humanoid or not HumanoidKills then continue end
 
             if CurrentItem.key and CurrentItem.key:IsA("Player") then
                 local NewRig = Players:CreateHumanoidModelFromUserIdAsync(CurrentItem.key.UserId)
                 NewRig.Name = if i == 1 then "One" elseif i == 2 then "Two" else "Three"
 
-                NewRig.Parent = PodiumCharacters[i].Parent
-                NewRig:PivotTo(PodiumCharacters[i]:GetPivot() + Vector3.new(0, 3, 0))
+                NewRig.Parent = PodiumSmackersCharacters[i].Parent
+                NewRig:PivotTo(PodiumSmackersCharacters[i]:GetPivot() + Vector3.new(0, 3, 0))
 
                 NewRig.Humanoid.DisplayDistanceType = Enum.HumanoidDisplayDistanceType.None
 
@@ -76,17 +88,53 @@ function RoundServiceServer.DisplayWinners()
 
                 BillboardGui.TextLabel.Text = CurrentItem.value .. " Smacks"
 
-                PodiumCharacters[i]:Destroy()
-                PodiumCharacters[i] = NewRig
+                PodiumSmackersCharacters[i]:Destroy()
+                PodiumSmackersCharacters[i] = NewRig
             else
                 local NewRig = ServerStorage.Placeholder:Clone()
                 NewRig.Name = if i == 1 then "One" elseif i == 2 then "Two" else "Three"
-                NewRig.Parent = PodiumCharacters[i].Parent
+                NewRig.Parent = PodiumSmackersCharacters[i].Parent
 
-                NewRig:PivotTo(PodiumCharacters[i]:GetPivot() + Vector3.new(0, 3, 0))
+                NewRig:PivotTo(PodiumSmackersCharacters[i]:GetPivot() + Vector3.new(0, 3, 0))
 
-                PodiumCharacters[i]:Destroy()
-                PodiumCharacters[i] = NewRig
+                PodiumSmackersCharacters[i]:Destroy()
+                PodiumSmackersCharacters[i] = NewRig
+            end
+
+            if CurrentItemKills.key and CurrentItemKills.key:IsA("Player") then
+                local NewRig = Players:CreateHumanoidModelFromUserIdAsync(CurrentItemKills.key.UserId)
+                NewRig.Name = if i == 1 then "One" elseif i == 2 then "Two" else "Three"
+
+                NewRig.Parent = PodiumKillsCharacters[i].Parent
+                NewRig:PivotTo(PodiumKillsCharacters[i]:GetPivot() + Vector3.new(0, 3, 0))
+
+                NewRig.Humanoid.DisplayDistanceType = Enum.HumanoidDisplayDistanceType.None
+
+                DestroyType("LocalScript", HumanoidKills.Parent)
+
+                local Animate = ServerStorage.Animate:Clone()
+                Animate.Parent = NewRig
+                Animate.Disabled = false
+
+                DestroyType("BillboardGui", HumanoidKills.Parent, true)
+
+                local BillboardGui = ServerStorage.SmacksCount:Clone()
+                BillboardGui.Parent = NewRig.Head
+                BillboardGui.Adornee = NewRig.Head
+
+                BillboardGui.TextLabel.Text = CurrentItemKills.value .. " Smacks"
+
+                PodiumKillsCharacters[i]:Destroy()
+                PodiumKillsCharacters[i] = NewRig
+            else
+                local NewRig = ServerStorage.Placeholder:Clone()
+                NewRig.Name = if i == 1 then "One" elseif i == 2 then "Two" else "Three"
+                NewRig.Parent = PodiumKillsCharacters[i].Parent
+
+                NewRig:PivotTo(PodiumKillsCharacters[i]:GetPivot() + Vector3.new(0, 3, 0))
+
+                PodiumKillsCharacters[i]:Destroy()
+                PodiumKillsCharacters[i] = NewRig
             end
         end
     end

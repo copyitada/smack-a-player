@@ -1,3 +1,4 @@
+local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local ServerScriptService = game:GetService("ServerScriptService")
 local ServerStorage = game:GetService("ServerStorage")
@@ -6,6 +7,7 @@ local Smackers = require(ReplicatedStorage.Shared.Smackers)
 local DataManager = require(ServerScriptService.Server.Modules.DataManager)
 local CombatServiceServer = require(ServerScriptService.Server.Services.CombatService.CombatServiceServer)
 local KnockbackServiceServer = require(ServerScriptService.Server.Services.KnockbackService.KnockbackServiceServer)
+local ValueServiceServer = require(ServerScriptService.Server.Services.ValueService.ValueServiceServer)
 
 local SwingSound = ServerStorage:FindFirstChild("swing")
 
@@ -57,6 +59,8 @@ function ToolService.InitializeSmacker(Player : Player, Tool)
             local VictimCharacter = VictimHumanoid.Parent
             if VictimCharacter.Name == Character.Name then return end
 
+            local VictimPlayer = Players:GetPlayerFromCharacter(VictimCharacter)
+
             if HumanoidDebounce[VictimHumanoid] then warn("------------ " .. VictimCharacter.Name .. " already hit! ---------------")
                 return
             end
@@ -78,6 +82,11 @@ function ToolService.InitializeSmacker(Player : Player, Tool)
 
             Smacks.Value += 1
             DataManager.AddSmacks(Player)
+
+            if VictimPlayer then
+                local PlayerValues = ValueServiceServer.GetValues(VictimPlayer)
+                PlayerValues.Attacker.Value = Player.Name
+            end
 
             local Pivot : CFrame = Character:FindFirstChild("HumanoidRootPart").CFrame
 

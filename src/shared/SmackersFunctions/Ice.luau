@@ -1,6 +1,9 @@
 local Debris = game:GetService("Debris")
+local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local ServerScriptService = game:GetService("ServerScriptService")
 local ServerStorage = game:GetService("ServerStorage")
+local ValueServiceServer = require(ServerScriptService.Server.Services.ValueService.ValueServiceServer)
 
 -- hi
 
@@ -93,6 +96,8 @@ Ice.AttackFunction = function(Player : Player)
         local VictimRootPart = VictimHumanoid.Parent:FindFirstChild("HumanoidRootPart")
         if not VictimRootPart then return end
 
+        local VictimPlayer = Players:GetPlayerFromCharacter(VictimCharacter)
+
         VictimCharacter.RagdollTrigger.Value = true
 
         if HumanoidDebounce[VictimHumanoid] then
@@ -110,6 +115,11 @@ Ice.AttackFunction = function(Player : Player)
         Params.FilterType = Enum.RaycastFilterType.Exclude
 
         VictimHumanoid:TakeDamage(4)
+        if VictimPlayer then
+            local PlayerValues = ValueServiceServer.GetValues(VictimPlayer)
+            PlayerValues.Attacker.Value = Player.Name
+        end
+
         task.spawn(function()
             print("ability touched initiated")
 
@@ -128,7 +138,6 @@ Ice.AttackFunction = function(Player : Player)
             end
             ]]
             task.wait(.5)
-
             local Stunned = Instance.new("BoolValue")
             Stunned.Name = "Stunned"
             Stunned.Parent = VictimCharacter

@@ -3,6 +3,7 @@ local Players = game:GetService("Players")
 local ServerScriptService = game:GetService("ServerScriptService")
 local ServerStorage = game:GetService("ServerStorage")
 local ToolServiceServer = require(ServerScriptService.Server.Services.ToolService.ToolServiceServer)
+local ValueServiceServer = require(ServerScriptService.Server.Services.ValueService.ValueServiceServer)
 
 local JavelinCopy = ServerStorage.Javelin
 
@@ -165,7 +166,6 @@ Javelin.AttackFunction = function(Player : Player)
 
     TouchConnection = Tip.Touched:Connect(function(Hit)
         print(Hit:GetFullName())
-
         if Hit:IsDescendantOf(Character) then return end
         if Hit:IsDescendantOf(NewJavelin) then return end
         if not Hit.CanCollide then return end
@@ -174,11 +174,18 @@ Javelin.AttackFunction = function(Player : Player)
         if VictimCharacter then
             local VictimHumanoid = VictimCharacter:FindFirstChild("Humanoid")
             if VictimHumanoid and VictimHumanoid ~= Humanoid and not HumanoidDebounces[Humanoid] then
+                local VictimPlayer = Players:GetPlayerFromCharacter(VictimCharacter)
+
                 HumanoidDebounces[Humanoid] = true
                 VictimCharacter.RagdollTrigger.Value = true
 
                 RootPartAction(VictimCharacter:FindFirstChild("HumanoidRootPart"), ThrownCFrame, Vector3.new(0, 0, 60))
                 VictimHumanoid:TakeDamage(20)
+
+                if VictimPlayer then
+                    local PlayerValues = ValueServiceServer.GetValues(VictimPlayer)
+                    PlayerValues.Attacker.Value = Player.Name
+                end
 
                 task.delay(2, function()
                     HumanoidDebounces[Humanoid] = nil

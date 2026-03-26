@@ -1,6 +1,9 @@
 local Debris = game:GetService("Debris")
+local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local ServerScriptService = game:GetService("ServerScriptService")
 local ServerStorage = game:GetService("ServerStorage")
+local ValueServiceServer = require(ServerScriptService.Server.Services.ValueService.ValueServiceServer)
 
 local Extended = {}
 
@@ -85,6 +88,8 @@ Extended.AttackFunction = function(Player : Player)
         if VictimCharacter.Name == Character.Name then return end
         VictimCharacter.RagdollTrigger.Value = true
 
+        local VictimPlayer = Players:GetPlayerFromCharacter(VictimCharacter)
+
         if HumanoidDebounce[VictimHumanoid] then
             warn("------------ " .. VictimCharacter.Name .. " already hit! ---------------")
             return
@@ -117,6 +122,11 @@ Extended.AttackFunction = function(Player : Player)
 
             Debree:ApplyImpulse(Vector3.new(math.random(-5, 5), 20, math.random(-5, 5)))
             Debris:AddItem(Debree, 10)
+        end
+
+        if VictimPlayer then
+            local PlayerValues = ValueServiceServer.GetValues(VictimPlayer)
+            PlayerValues.Attacker.Value = Player.Name
         end
 
         VictimHumanoid:TakeDamage(35)

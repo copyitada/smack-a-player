@@ -1,6 +1,9 @@
 local Debris = game:GetService("Debris")
+local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local ServerScriptService = game:GetService("ServerScriptService")
 local ServerStorage = game:GetService("ServerStorage")
+local ValueServiceServer = require(ServerScriptService.Server.Services.ValueService.ValueServiceServer)
 
 local PunchEffect = ServerStorage:FindFirstChild("HitFX").Punch
 local SmackSound = ServerStorage:FindFirstChild("snap.wav")
@@ -83,6 +86,8 @@ Firish.AttackFunction = function(Player : Player)
         if VictimCharacter.Name == Character.Name then return end
         VictimCharacter.RagdollTrigger.Value = true
 
+        local VictimPlayer = Players:GetPlayerFromCharacter(VictimCharacter)
+
         if HumanoidDebounce[VictimHumanoid] then
             warn("------------ " .. VictimCharacter.Name .. " already hit! ---------------")
             return
@@ -96,6 +101,11 @@ Firish.AttackFunction = function(Player : Player)
         Params.FilterType = Enum.RaycastFilterType.Exclude
 
         VictimHumanoid:TakeDamage(15)
+        if VictimPlayer then
+            local PlayerValues = ValueServiceServer.GetValues(VictimPlayer)
+            PlayerValues.Attacker.Value = Player.Name
+        end
+
         task.spawn(function()
             local Highlight : Highlight = Instance.new("Highlight")
             Highlight.OutlineTransparency = 1
