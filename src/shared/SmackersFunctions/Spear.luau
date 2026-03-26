@@ -125,18 +125,20 @@ Javelin.AttackFunction = function(Player : Player)
         end
     end
 
-    for _, Dummy in workspace.Dummy:GetChildren() do
-        if not Dummy:IsA("Model") then continue end
+    if workspace:FindFirstChild("Dummy") then
+        for _, Dummy in workspace.Dummy:GetChildren() do
+            if not Dummy:IsA("Model") then continue end
 
-        local DummyHumanoid = Dummy:FindFirstChild("Humanoid")
-        if not DummyHumanoid or DummyHumanoid.Health <= 0 then continue end
+            local DummyHumanoid = Dummy:FindFirstChild("Humanoid")
+            if not DummyHumanoid or DummyHumanoid.Health <= 0 then continue end
 
-        if not IsPlayerInfront(Dummy, Character) then continue end
+            if not IsPlayerInfront(Dummy, Character) then continue end
 
-        local Distance = (Character:GetPivot().Position - Dummy:GetPivot().Position).Magnitude
-        if Distance < ClosestDistance then
-            PlayerClosestInfront = Dummy
-            ClosestDistance = Distance
+            local Distance = (Character:GetPivot().Position - Dummy:GetPivot().Position).Magnitude
+            if Distance < ClosestDistance then
+                PlayerClosestInfront = Dummy
+                ClosestDistance = Distance
+            end
         end
     end
 
@@ -146,10 +148,10 @@ Javelin.AttackFunction = function(Player : Player)
     if PlayerClosestInfront then
         NewJavelin:PivotTo(ToolCFrame)
 
-        local Head = PlayerClosestInfront:FindFirstChild("Head")
-        if not Head then return end
+        local Torso = PlayerClosestInfront:FindFirstChild("Torso")
+        if not Torso then return end
 
-        NewJavelin:PivotTo(CFrame.lookAt(ToolCFrame.Position, Head.Position))
+        NewJavelin:PivotTo(CFrame.lookAt(ToolCFrame.Position, Torso.Position))
     else
         NewJavelin:PivotTo(ToolCFrame)
     end

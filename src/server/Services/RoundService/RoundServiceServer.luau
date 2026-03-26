@@ -122,7 +122,7 @@ function RoundServiceServer.DisplayWinners()
                 BillboardGui.Parent = NewRig.Head
                 BillboardGui.Adornee = NewRig.Head
 
-                BillboardGui.TextLabel.Text = CurrentItemKills.value .. " Smacks"
+                BillboardGui.TextLabel.Text = CurrentItemKills.value .. " Kills"
 
                 PodiumKillsCharacters[i]:Destroy()
                 PodiumKillsCharacters[i] = NewRig
@@ -184,7 +184,7 @@ function RoundServiceServer.Start()
 
         if RoundStats then
             RoundStats.Smacks.Value = 0
-            RoundStats.Deaths.Value = 0
+            RoundStats.Kills.Value = 0
         end
 
         local Character = Player.Character or Player.CharacterAdded:Wait()

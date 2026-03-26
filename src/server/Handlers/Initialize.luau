@@ -30,8 +30,9 @@ local function PlayerAdded(Player : Player)
 
     Player.CharacterAdded:Connect(function(Character)
         task.wait()
+        Attacker.Value = ""
 
-        -- if Player.Team.Name == "Lobby" then return end
+        if Player.Team.Name == "Lobby" then return end
         local SmackerInstance = ServerStorage.Smackers:FindFirstChild(SmackerName.Value) or ServerStorage.Smackers.Default
 
         local SmackerTool = SmackerInstance:Clone()
@@ -45,14 +46,14 @@ local function PlayerAdded(Player : Player)
                 local AttackerValues
 
                 for _, IterationPlayer in Players:GetPlayers() do
-                    if Player.Name ~= Attacker.Value then continue end
+                    if IterationPlayer.Name ~= Attacker.Value then continue end
                     AttackerPlayer = IterationPlayer
                 end
 
                 if not AttackerPlayer then
                     AttackerPlayer = Player
                 end
-                
+
                 AttackerValues = ValueServiceServer.GetValues(AttackerPlayer)
                 if not AttackerValues then return end
 

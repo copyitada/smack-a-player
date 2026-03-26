@@ -39,4 +39,12 @@ return {
             AttackDebounce = 5,
         }
     },
+    {
+        SmackerName = "Dash",
+        Attack = {
+            AttackName = "Dash",
+            AttackDuration = .5,
+            AttackDebounce = 3,
+        }
+    },
 }
