@@ -77,6 +77,10 @@ function CombatServiceServer.Parry(Player : Player, Block : boolean?)
                 print("passed?", Passed)
 
                 if not Passed then
+                    if Blocking then
+                        Blocking:Destroy()
+                    end
+
                     Humanoid.WalkSpeed = 16
                     BlockDebounces[Humanoid] = nil
 
@@ -184,6 +188,7 @@ function CombatServiceServer.Parried(Player : Player, Hit, SmackAnimationTrack :
     SmackAnimationTrack:Stop()
 
     CombatServiceServer.Stun(Character, 4)
+    task.wait()
     Humanoid.WalkSpeed = 0
 
     task.delay(4, function()

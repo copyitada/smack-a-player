@@ -74,15 +74,15 @@ function ToolService.InitializeSmacker(Player : Player, Tool)
             ReplicatedStorage.Remotes.ShakeOnce:FireClient(Player, 5, 10, .1, .4)
 
             VictimCharacter.RagdollTrigger.Value = true
-            VictimHumanoid:TakeDamage(7)
+            VictimHumanoid:TakeDamage(Tool.Name == "Extended" and 6 or 7)
 
             Smacks.Value += 1
             DataManager.AddSmacks(Player)
 
             local Pivot : CFrame = Character:FindFirstChild("HumanoidRootPart").CFrame
 
-            local KnockbackSpeed = Tool.Name == "Extended" and 50 or nil
-            local KnockbackUp = Tool.Name == "Extended" and 10 or nil
+            local KnockbackSpeed = Tool.Name == "Extended" and 45 or nil
+            local KnockbackUp = Tool.Name == "Extended" and 20 or nil
             KnockbackServiceServer.Apply(VictimCharacter:FindFirstChild("HumanoidRootPart"), Pivot, KnockbackSpeed, KnockbackUp)
 
             task.delay(1.5, function()

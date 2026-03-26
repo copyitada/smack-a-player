@@ -73,7 +73,10 @@ Extended.AttackFunction = function(Player : Player)
     SwingCloneSound:Play()
 
     AnimTrack:Play()
+    AnimTrack:AdjustSpeed(.5)
+
     AnimTrack:GetMarkerReachedSignal("Hit"):Wait()
+    AnimTrack:AdjustSpeed(2)
 
     TouchConnection = PrimaryPart.Touched:Connect(function(Hit)
         local VictimHumanoid = Hit.Parent:FindFirstChild("Humanoid")

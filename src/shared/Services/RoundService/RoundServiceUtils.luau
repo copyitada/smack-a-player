@@ -4,7 +4,7 @@ local RoundServiceUtils = {}
 
 RoundServiceUtils.Settings = {
     INTERMISSION_TIMER = {
-        STUDIO = 5,
+        STUDIO = 60,
         PUBLIC = 30
     },
     REQUIRED_PLAYERS = {

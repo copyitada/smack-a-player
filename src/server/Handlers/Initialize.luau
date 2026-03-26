@@ -29,7 +29,7 @@ local function PlayerAdded(Player : Player)
     Player.CharacterAdded:Connect(function(Character)
         task.wait()
 
-        if Player.Team.Name == "Lobby" then return end
+        -- if Player.Team.Name == "Lobby" then return end
         local SmackerInstance = ServerStorage.Smackers:FindFirstChild(SmackerName.Value) or ServerStorage.Smackers.Default
 
         local SmackerTool = SmackerInstance:Clone()

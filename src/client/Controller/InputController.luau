@@ -227,6 +227,13 @@ local function RenderStepped()
     end
 end
 
+local function IsPlayerInfront(Character1, Character2)
+    local Direction = (Character1:GetPivot().Position - Character2:GetPivot().Position).Unit
+    print(Direction)
+
+    return Character1:GetPivot().LookVector:Dot(Direction) > .45, Direction
+end
+
 local function CharacterAdded(NewCharacter)
     Character = NewCharacter
     Head = NewCharacter:WaitForChild("Head")
@@ -256,6 +263,12 @@ local function CharacterAdded(NewCharacter)
     if Head then
         LastHeadCFrame = Head.CFrame
     end
+
+    for _, VictimCharacter in workspace:GetDescendants() do
+        if not Character:FindFirstChild("Humanoid") then continue end
+        if VictimCharacter == Character then continue end
+        IsPlayerInfront(Character, VictimCharacter)
+    end 
 end
 
 function InputController.Init()

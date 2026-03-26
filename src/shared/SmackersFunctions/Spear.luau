@@ -1,4 +1,5 @@
 local Debris = game:GetService("Debris")
+local Players = game:GetService("Players")
 local ServerScriptService = game:GetService("ServerScriptService")
 local ServerStorage = game:GetService("ServerStorage")
 local ToolServiceServer = require(ServerScriptService.Server.Services.ToolService.ToolServiceServer)
@@ -43,6 +44,11 @@ local function RootPartAction(RootPart, CFrame : CFrame, Velocity : Vector3?)
     Debris:AddItem(CloneSound, 1)
     Debris:AddItem(EffectClone, 1)
     Debris:AddItem(LinearVelocity, 0.2)
+end
+
+local function IsPlayerInfront(VictimCharacter, ThrowingCharacter)
+    local Direction = (VictimCharacter:GetPivot().Position - ThrowingCharacter:GetPivot().Position).Unit
+    return ThrowingCharacter:GetPivot().LookVector:Dot(Direction) > 0.45
 end
 
 Javelin.AttackFunction = function(Player : Player)
@@ -98,8 +104,54 @@ Javelin.AttackFunction = function(Player : Player)
         ToolServiceServer.InitializeSmacker(Player, SmackerTool)
     end)
 
+    local PlayerClosestInfront : Model
+    local ClosestDistance = math.huge
+
+    for _, VictimPlayer in Players:GetPlayers() do
+        local VictimCharacter = VictimPlayer.Character
+        if not VictimCharacter then continue end
+        if VictimCharacter == Character then continue end
+
+        local VictimHumanoid = VictimCharacter:FindFirstChild("Humanoid")
+        if not VictimHumanoid or VictimHumanoid.Health <= 0 then continue end
+
+        if not IsPlayerInfront(VictimCharacter, Character) then continue end
+
+        local Distance = (Character:GetPivot().Position - VictimCharacter:GetPivot().Position).Magnitude
+        if Distance < ClosestDistance then
+            PlayerClosestInfront = VictimCharacter
+            ClosestDistance = Distance
+        end
+    end
+
+    for _, Dummy in workspace.Dummy:GetChildren() do
+        if not Dummy:IsA("Model") then continue end
+
+        local DummyHumanoid = Dummy:FindFirstChild("Humanoid")
+        if not DummyHumanoid or DummyHumanoid.Health <= 0 then continue end
+
+        if not IsPlayerInfront(Dummy, Character) then continue end
+
+        local Distance = (Character:GetPivot().Position - Dummy:GetPivot().Position).Magnitude
+        if Distance < ClosestDistance then
+            PlayerClosestInfront = Dummy
+            ClosestDistance = Distance
+        end
+    end
+
     local NewJavelin : Model = JavelinCopy:Clone()
     NewJavelin.Parent = workspace
+
+    if PlayerClosestInfront then
+        NewJavelin:PivotTo(ToolCFrame)
+
+        local Head = PlayerClosestInfront:FindFirstChild("Head")
+        if not Head then return end
+
+        NewJavelin:PivotTo(CFrame.lookAt(ToolCFrame.Position, Head.Position))
+    else
+        NewJavelin:PivotTo(ToolCFrame)
+    end
 
     local Tip = NewJavelin.PrimaryPart
 
@@ -108,12 +160,9 @@ Javelin.AttackFunction = function(Player : Player)
         Sound:Play()
     end
 
-    NewJavelin:PivotTo(ToolCFrame)
-
     local StartTime = tick()
     local ThrownCFrame = RootPart.CFrame
 
-    -- hit detection
     TouchConnection = Tip.Touched:Connect(function(Hit)
         print(Hit:GetFullName())
 
@@ -121,7 +170,6 @@ Javelin.AttackFunction = function(Player : Player)
         if Hit:IsDescendantOf(NewJavelin) then return end
         if not Hit.CanCollide then return end
 
-        -- damage hit player
         local VictimCharacter = Hit:FindFirstAncestorOfClass("Model")
         if VictimCharacter then
             local VictimHumanoid = VictimCharacter:FindFirstChild("Humanoid")
@@ -141,7 +189,6 @@ Javelin.AttackFunction = function(Player : Player)
             end
         end
 
-        -- disappear after 2 seconds of being stuck
         task.delay(5, function()
             if NewJavelin and NewJavelin.Parent then
                 NewJavelin:Destroy()
@@ -149,7 +196,6 @@ Javelin.AttackFunction = function(Player : Player)
         end)
     end)
 
-    -- slow down over lifetime then disappear
     task.spawn(function()
         while Moving do
             if not NewJavelin or not NewJavelin.Parent then
@@ -157,7 +203,7 @@ Javelin.AttackFunction = function(Player : Player)
                 return
             end
 
-            NewJavelin:PivotTo(NewJavelin:GetPivot() + NewJavelin:GetPivot().LookVector)
+            NewJavelin:PivotTo(NewJavelin:GetPivot() + NewJavelin:GetPivot().LookVector * 2)
 
             task.wait()
 
