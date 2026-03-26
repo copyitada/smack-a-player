@@ -31,4 +31,12 @@ return {
             AttackDebounce = 20,
         }
     },
+    {
+        SmackerName = "Spear",
+        Attack = {
+            AttackName = "Throw",
+            AttackDuration = 1,
+            AttackDebounce = 5,
+        }
+    },
 }

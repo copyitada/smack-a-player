@@ -174,6 +174,12 @@ local function RenderStepped()
     
     if not Humanoid or not Head or not RootPart then return end
 
+    if Humanoid.Health <= 0 then
+        IsDead = true
+    else
+        IsDead = false
+    end
+
     if not Humanoid.Parent:FindFirstChild("Blocking") and not Humanoid.Parent:FindFirstChild("Stunned") then
         if Running then
             Humanoid.WalkSpeed = 20
@@ -204,7 +210,7 @@ local function RenderStepped()
     TimerUI.Text = string.format("[ %02d:%02d ]", TimerValue.Value/60, TimerValue.Value%60)
     CaptionUI.Text = CaptionValue.Value
 
-	if IsDead then
+	if not IsDead then
         Camera.CameraType = Enum.CameraType.Custom
         Camera.CameraSubject = Humanoid
 
@@ -233,6 +239,7 @@ local function CharacterAdded(NewCharacter)
     IsDead = false
 
     Humanoid.Died:Connect(function()
+        print("player died")
         IsDead = true
     end)
 

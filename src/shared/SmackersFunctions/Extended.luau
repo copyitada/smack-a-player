@@ -64,7 +64,7 @@ Extended.AttackFunction = function(Player : Player)
     if SpecialAttackDebounces[Humanoid] then return false end
     SpecialAttackDebounces[Humanoid] = true
 
-    task.delay(10, function()
+    task.delay(20, function()
         SpecialAttackDebounces[Humanoid] = nil
     end)
 

@@ -34,7 +34,7 @@ function ToolService.InitializeSmacker(Player : Player, Tool)
     Tool.Activated:Connect(function()
         if not ToolService.CheckEligibility(Player) then return end
 
-        for _, Trail in PrimaryPart:GetChildren() do
+        for _, Trail in Tool:GetDescendants() do
             if Trail:IsA("Trail") then
                 Trail.Transparency = NumberSequence.new(.7, .7)
             end
