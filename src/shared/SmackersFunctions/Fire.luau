@@ -5,9 +5,9 @@ local ServerScriptService = game:GetService("ServerScriptService")
 local ServerStorage = game:GetService("ServerStorage")
 local ValueServiceServer = require(ServerScriptService.Server.Services.ValueService.ValueServiceServer)
 
-local PunchEffect = ServerStorage:FindFirstChild("HitFX").Punch
-local SmackSound = ServerStorage:FindFirstChild("snap.wav")
-local SwingSound = ServerStorage:FindFirstChild("swing")
+local OuchSound = ServerStorage:FindFirstChild("ouch")
+local ThunderSound = ServerStorage:FindFirstChild("thunder")
+local Windup = ServerStorage:FindFirstChild("windup")
 
 local SpecialAttackDebounces = {}
 local Firish = {}
@@ -22,22 +22,13 @@ local function RootPartAction(RootPart, CFrame : CFrame, Velocity : Vector3?)
     LinearVelocity.MaxForce = math.huge
     LinearVelocity.VectorVelocity = CFrame.RightVector * Vel.X + CFrame.UpVector * Vel.Y + CFrame.LookVector * Vel.Z
 
-    local EffectClone : Attachment = PunchEffect:Clone()
-    EffectClone.Parent = RootPart
-    EffectClone.WorldCFrame = RootPart.CFrame
-
-    for _, Particle in EffectClone:GetChildren() do
-        task.spawn(function()
-            Particle:Emit(Particle:GetAttribute("EmitCount"))
-        end)
-    end
-
+    --[[
     local CloneSound : Sound = SmackSound:Clone()
     CloneSound.Parent = RootPart
     CloneSound:Play()
+    ]]
 
-    Debris:AddItem(CloneSound, 1)
-    Debris:AddItem(EffectClone, 1)
+    -- Debris:AddItem(CloneSound, 1)
     Debris:AddItem(LinearVelocity, 0.2)
 end
 
@@ -48,12 +39,11 @@ Firish.AttackFunction = function(Player : Player)
 
     local Animation = Instance.new("Animation")
     Animation.Name = "SpecialAttack"
-    Animation.AnimationId = "rbxassetid://122032410120318"
+    Animation.AnimationId = "rbxassetid://115612258137561"
 
     local AnimTrack : AnimationTrack  = Humanoid.Animator:LoadAnimation(Animation)
     local Tool = Player.Backpack:FindFirstChild(script.Name) or Character:FindFirstChild(script.Name)
 
-    local TouchConnection
     local PrimaryPart = Tool:FindFirstChild("EvadeTaxes")
 
     local _FirishParticle : ParticleEmitter = PrimaryPart:FindFirstChild("ParticleEmitter")
@@ -72,72 +62,109 @@ Firish.AttackFunction = function(Player : Player)
         SpecialAttackDebounces[Humanoid] = nil
     end)
 
-    local SwingCloneSound : Sound = SwingSound:Clone()
-    SwingCloneSound.Parent = Character:FindFirstChild("HumanoidRootPart")
-    SwingCloneSound:Play()
+    local Thunder : Sound = ThunderSound:Clone()
+    Thunder.Parent = Character:FindFirstChild("HumanoidRootPart")   
+
+    local Ouch : Sound = OuchSound:Clone()
+    Ouch.Parent = Character:FindFirstChild("HumanoidRootPart")   
+
+    local WindupSound : Sound = Windup:Clone()
+    WindupSound.Parent = Character:FindFirstChild("HumanoidRootPart")
+    WindupSound:Play()
 
     AnimTrack:Play()
-    AnimTrack:GetMarkerReachedSignal("Hit"):Wait()
+    AnimTrack:GetMarkerReachedSignal("Fire"):Wait()
+    Thunder:Play()
 
-    TouchConnection = PrimaryPart.Touched:Connect(function(Hit)
-        local VictimHumanoid = Hit.Parent:FindFirstChild("Humanoid")
-        if not VictimHumanoid then return end
+    local AreaOfFire = ServerStorage.FirePlace:Clone()
+    AreaOfFire.Parent = workspace
+    
+    local Params = RaycastParams.new()
+    Params.FilterDescendantsInstances = {Character}
+    Params.FilterType = Enum.RaycastFilterType.Exclude
+
+    local Results = workspace:Raycast(Character:GetPivot().Position + Vector3.new(0, 10, 0), Vector3.new(0, -999999, 0), Params)
+    if Results and Results.Instance then
+        local TouchConnection
+
+        local Explosion = Instance.new("Explosion")
+        Explosion.BlastRadius = 20
+        Explosion.BlastPressure = 0
+        Explosion.DestroyJointRadiusPercent = 0
+
+        Explosion.Parent = workspace
+        Explosion.Position = Results.Position
+
+        AreaOfFire.Position = Results.Position
+        Debris:AddItem(AreaOfFire, 10)
+
+        TouchConnection = AreaOfFire.Touched:Connect(function(Hit)
+            local VictimHumanoid = Hit.Parent:FindFirstChild("Humanoid")
+            if not VictimHumanoid then return end
             local VictimCharacter = VictimHumanoid.Parent
-        if VictimCharacter.Name == Character.Name then return end
-        VictimCharacter.RagdollTrigger.Value = true
+            if VictimCharacter.Name == Character.Name then return end
 
-        local VictimPlayer = Players:GetPlayerFromCharacter(VictimCharacter)
+            local VictimPlayer = Players:GetPlayerFromCharacter(VictimCharacter)
 
-        if HumanoidDebounce[VictimHumanoid] then
-            warn("------------ " .. VictimCharacter.Name .. " already hit! ---------------")
-            return
-        end
-        
-        HumanoidDebounce[VictimHumanoid] = true
-        ReplicatedStorage.Remotes.ShakeOnce:FireClient(Player, 10, 20, .4, 1.1)
-
-        local Params = RaycastParams.new()
-        Params.FilterDescendantsInstances = {VictimCharacter}
-        Params.FilterType = Enum.RaycastFilterType.Exclude
-
-        VictimHumanoid:TakeDamage(15)
-        if VictimPlayer then
-            local PlayerValues = ValueServiceServer.GetValues(VictimPlayer)
-            PlayerValues.Attacker.Value = Player.Name
-        end
-
-        task.spawn(function()
-            local Highlight : Highlight = Instance.new("Highlight")
-            Highlight.OutlineTransparency = 1
-            Highlight.FillColor = Color3.fromRGB(255, 115, 0)
-            Highlight.FillTransparency = 0.3
-
-            Highlight.Parent = VictimCharacter
-            Highlight.Adornee = VictimCharacter
+            if HumanoidDebounce[VictimHumanoid] then
+                warn("------------ " .. VictimCharacter.Name .. " already hit! ---------------")
+                return
+            end
             
-            --local Particle = FirishParticle:Clone()
-            --Particle.Parent = VictimCharacter.HumanoidRootPart.RootAttachment
+            HumanoidDebounce[VictimHumanoid] = true
+            ReplicatedStorage.Remotes.ShakeOnce:FireClient(Player, 10, 20, .4, 1.1)
 
-            for _ = 1, 8 do
-                task.wait(1)
-                VictimHumanoid:TakeDamage(4)
+            if VictimPlayer then
+                local PlayerValues = ValueServiceServer.GetValues(VictimPlayer)
+                PlayerValues.Attacker.Value = Player.Name
             end
 
-            --Particle:Destroy()
-            Highlight:Destroy()
+            task.spawn(function()
+                VictimHumanoid:TakeDamage(15)
+                VictimCharacter.RagdollTrigger.Value = true
+                print("ragdolled!")
+
+                local Highlight : Highlight = Instance.new("Highlight")
+                Highlight.OutlineTransparency = 1
+                Highlight.FillColor = Color3.fromRGB(255, 115, 0)
+                Highlight.FillTransparency = 0.3
+
+                Highlight.Parent = VictimCharacter
+                Highlight.Adornee = VictimCharacter
+                
+                --local Particle = FirishParticle:Clone()
+                --Particle.Parent = VictimCharacter.HumanoidRootPart.RootAttachment
+
+                for _ = 1, 8 do
+                    task.wait(1)
+                    Ouch:Play()
+                    VictimHumanoid:TakeDamage(4)
+                end
+
+                --Particle:Destroy()
+                HumanoidDebounce[VictimHumanoid] = nil
+                Highlight:Destroy()
+            end)
+
+            task.delay(1, function()
+                TouchConnection:Disconnect()
+            end)
+
+            local Pivot : CFrame = Character:FindFirstChild("HumanoidRootPart").CFrame
+            RootPartAction(VictimCharacter:FindFirstChild("HumanoidRootPart"), Pivot)
+
+            task.delay(2.5, function()
+                VictimCharacter.RagdollTrigger.Value = false
+                print("unragdolled")
+            end)
         end)
 
-        local Pivot : CFrame = Character:FindFirstChild("HumanoidRootPart").CFrame
-        RootPartAction(VictimCharacter:FindFirstChild("HumanoidRootPart"), Pivot)
-
-        task.delay(2.5, function()
-            VictimCharacter.RagdollTrigger.Value = false
+        task.delay(10, function()
+            TouchConnection:Disconnect()
         end)
-    end)
+    end
 
     AnimTrack.Ended:Wait()
-
-    TouchConnection:Disconnect()
     for _, Trail in PrimaryPart:GetChildren() do
         if Trail:IsA("Trail") then
             Trail.Lifetime = .1
