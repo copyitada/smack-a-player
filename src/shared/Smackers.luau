@@ -62,7 +62,29 @@ return {
         Attack = {
             AttackName = "Dash",
             AttackDuration = .5,
-            AttackDebounce = 3,
+            AttackDebounce = 2,
+        }
+    },
+    {
+        SmackerName = "Stealth",
+        Shop = {
+            Price = 500
+        },
+        Attack = {
+            AttackName = "Camouflage",
+            AttackDuration = .5,
+            AttackDebounce = 15,
+        }
+    },
+    {
+        SmackerName = "Landmine",
+        Shop = {
+            Price = 1000
+        },
+        Attack = {
+            AttackName = "Explode",
+            AttackDuration = .5,
+            AttackDebounce = 25,
         }
     },
 }
