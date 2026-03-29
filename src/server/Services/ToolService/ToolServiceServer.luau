@@ -32,6 +32,8 @@ function ToolService.InitializeSmacker(Player : Player, Tool)
     local AnimTrack = Animator:LoadAnimation(SmackAnimation)
     local TouchConnection
 
+    local SmackerInformation = ToolServiceUtils.GetInformation(Player)
+
     Tool.Activated:Connect(function()
         if not ToolService.CheckEligibility(Player) then return end
 
@@ -77,7 +79,7 @@ function ToolService.InitializeSmacker(Player : Player, Tool)
             ReplicatedStorage.Remotes.ShakeOnce:FireClient(Player, 5, 10, .1, .4)
 
             VictimCharacter.RagdollTrigger.Value = true
-            VictimHumanoid:TakeDamage(Tool.Name == "Extended" and 6 or 7)
+            VictimHumanoid:TakeDamage(SmackerInformation.Smack.Damage)
 
             Smacks.Value += 1
             DataManager.AddSmacks(Player)
@@ -89,8 +91,8 @@ function ToolService.InitializeSmacker(Player : Player, Tool)
 
             local Pivot : CFrame = Character:FindFirstChild("HumanoidRootPart").CFrame
 
-            local KnockbackSpeed = Tool.Name == "Extended" and 45 or nil
-            local KnockbackUp = Tool.Name == "Extended" and 20 or nil
+            local KnockbackSpeed = SmackerInformation.Smack.KnockbackSpeed
+            local KnockbackUp = SmackerInformation.Smack.KnockbackUp
             KnockbackServiceServer.Apply(VictimCharacter:FindFirstChild("HumanoidRootPart"), Pivot, KnockbackSpeed, KnockbackUp)
 
             task.delay(1.5, function()

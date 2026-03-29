@@ -4,6 +4,12 @@ return {
         Shop = {
             Price = 0
         },
+        Smack = {
+            Damage = 7,
+            KnockbackSpeed = 30,
+            KnockbackUp = 15,
+            AnimationSpeed = 1,
+        },
         Attack = {
             AttackName = "Smash",
             AttackDuration = 2,
@@ -14,6 +20,12 @@ return {
         SmackerName = "Extended",
         Shop = {
             Price = 10
+        },
+        Smack = {
+            Damage = 6,
+            KnockbackSpeed = 45,
+            KnockbackUp = 20,
+            AnimationSpeed = 1,
         },
         Attack = {
             AttackName = "Long Smash",
@@ -26,6 +38,12 @@ return {
         Shop = {
             Price = 25
         },
+        Smack = {
+            Damage = 7,
+            KnockbackSpeed = 30,
+            KnockbackUp = 15,
+            AnimationSpeed = 1,
+        },
         Attack = {
             AttackName = "Too Hot",
             AttackDuration = 2,
@@ -36,6 +54,12 @@ return {
         SmackerName = "Ice",
         Shop = {
             Price = 50
+        },
+        Smack = {
+            Damage = 7,
+            KnockbackSpeed = 30,
+            KnockbackUp = 15,
+            AnimationSpeed = 1,
         },
         Attack = {
             AttackName = "Too Cold",
@@ -48,6 +72,12 @@ return {
         Shop = {
             Price = 100
         },
+        Smack = {
+            Damage = 7,
+            KnockbackSpeed = 30,
+            KnockbackUp = 15,
+            AnimationSpeed = 1,
+        },
         Attack = {
             AttackName = "Throw",
             AttackDuration = 1,
@@ -58,6 +88,12 @@ return {
         SmackerName = "Dash",
         Shop = {
             Price = 250
+        },
+        Smack = {
+            Damage = 8,
+            KnockbackSpeed = 30,
+            KnockbackUp = 15,
+            AnimationSpeed = 1,
         },
         Attack = {
             AttackName = "Dash",
@@ -70,6 +106,12 @@ return {
         Shop = {
             Price = 500
         },
+        Smack = {
+            Damage = 8,
+            KnockbackSpeed = 30,
+            KnockbackUp = 15,
+            AnimationSpeed = 1,
+        },
         Attack = {
             AttackName = "Camouflage",
             AttackDuration = .5,
@@ -80,6 +122,12 @@ return {
         SmackerName = "Landmine",
         Shop = {
             Price = 1000
+        },
+        Smack = {
+            Damage = 7,
+            KnockbackSpeed = 30,
+            KnockbackUp = 15,
+            AnimationSpeed = 1,
         },
         Attack = {
             AttackName = "Explode",
