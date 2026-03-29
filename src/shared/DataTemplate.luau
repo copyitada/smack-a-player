@@ -1,4 +1,7 @@
 return {
     Smacks = 0,
-    SmackerName = "Default"
+    SmackerName = "Default",
+    BoughtSmackers = {
+        "Default"
+    }
 }

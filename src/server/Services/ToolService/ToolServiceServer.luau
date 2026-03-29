@@ -3,7 +3,6 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local ServerScriptService = game:GetService("ServerScriptService")
 local ServerStorage = game:GetService("ServerStorage")
 local ToolServiceUtils = require(ReplicatedStorage.Shared.Services.ToolService.ToolServiceUtils)
-local Smackers = require(ReplicatedStorage.Shared.Smackers)
 local DataManager = require(ServerScriptService.Server.Modules.DataManager)
 local CombatServiceServer = require(ServerScriptService.Server.Services.CombatService.CombatServiceServer)
 local KnockbackServiceServer = require(ServerScriptService.Server.Services.KnockbackService.KnockbackServiceServer)
@@ -28,7 +27,7 @@ function ToolService.InitializeSmacker(Player : Player, Tool)
     local SmackAnimation : Animation = Instance.new("Animation")
     SmackAnimation.Name = "SmackAnimation"
     SmackAnimation.Parent = Tool
-    SmackAnimation.AnimationId = "rbxassetid://83279013883666"
+    SmackAnimation.AnimationId = "rbxassetid://136511099213466"
 
     local AnimTrack = Animator:LoadAnimation(SmackAnimation)
     local TouchConnection
@@ -124,24 +123,14 @@ function ToolService.InitializeSmacker(Player : Player, Tool)
     end)
 end
 
-function ToolService.GetInformation(Player)
-    local SmackerName = Player:FindFirstChild("Values"):FindFirstChild("SmackerName").Value or "Default"
-
-    for _, SmackerInformation in Smackers do
-        if SmackerInformation.SmackerName == SmackerName then
-            return SmackerInformation
-        end
-    end
-
-    return Smackers[1]
-end
-
 function ToolService.EquipSmacker(Player, SmackerName)
     local Values = Player:FindFirstChild("Values")
     if not Values then return end
 
     local Smacker = Values:FindFirstChild("SmackerName")
     if not Smacker then return end
+
+    DataManager.SetSmacker(Player, SmackerName)
 
     Smacker.Value = SmackerName
 end

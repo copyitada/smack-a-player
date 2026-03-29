@@ -13,6 +13,34 @@ function DataManager.AddSmacks(Player)
     end
 end
 
+function DataManager.GetSmacks(Player)
+    local Profile = DataManager.Profiles[Player]
+    if not Profile then return end
+
+    return Profile.Data.Smacks
+end
+
+function DataManager.UnlockSmacker(Player, SmackerName)
+    local Profile = DataManager.Profiles[Player]
+    if not Profile then return end
+
+    table.insert(Profile.Data.BoughtSmackers, SmackerName)
+end
+
+function DataManager.GetUnlockedSmackers(Player)
+    local Profile = DataManager.Profiles[Player]
+    if not Profile then return end
+
+    return Profile.Data.BoughtSmackers
+end
+
+function DataManager.ClearSmackers(Player)
+    local Profile = DataManager.Profiles[Player]
+    if not Profile then return end
+
+    Profile.Data.BoughtSmackers = {"Default"}
+end
+
 function DataManager.SetSmacker(Player, SmackerName)
     local Profile = DataManager.Profiles[Player]
     if not Profile then return end

@@ -1,6 +1,9 @@
 return {
     {
         SmackerName = "Default",
+        Shop = {
+            Price = 0
+        },
         Attack = {
             AttackName = "Smash",
             AttackDuration = 2,
@@ -8,7 +11,21 @@ return {
         }
     },
     {
+        SmackerName = "Extended",
+        Shop = {
+            Price = 10
+        },
+        Attack = {
+            AttackName = "Long Smash",
+            AttackDuration = 2,
+            AttackDebounce = 20,
+        }
+    },
+    {
         SmackerName = "Fire",
+        Shop = {
+            Price = 25
+        },
         Attack = {
             AttackName = "Too Hot",
             AttackDuration = 2,
@@ -17,6 +34,9 @@ return {
     },
     {
         SmackerName = "Ice",
+        Shop = {
+            Price = 50
+        },
         Attack = {
             AttackName = "Too Cold",
             AttackDuration = 2,
@@ -24,15 +44,10 @@ return {
         }
     },
     {
-        SmackerName = "Extended",
-        Attack = {
-            AttackName = "Long Smash",
-            AttackDuration = 2,
-            AttackDebounce = 20,
-        }
-    },
-    {
         SmackerName = "Spear",
+        Shop = {
+            Price = 100
+        },
         Attack = {
             AttackName = "Throw",
             AttackDuration = 1,
@@ -41,6 +56,9 @@ return {
     },
     {
         SmackerName = "Dash",
+        Shop = {
+            Price = 250
+        },
         Attack = {
             AttackName = "Dash",
             AttackDuration = .5,

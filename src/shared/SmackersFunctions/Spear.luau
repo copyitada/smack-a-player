@@ -1,7 +1,9 @@
 local Debris = game:GetService("Debris")
 local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
 local ServerScriptService = game:GetService("ServerScriptService")
 local ServerStorage = game:GetService("ServerStorage")
+local TweenService = game:GetService("TweenService")
 local ToolServiceServer = require(ServerScriptService.Server.Services.ToolService.ToolServiceServer)
 local ValueServiceServer = require(ServerScriptService.Server.Services.ValueService.ValueServiceServer)
 
@@ -212,9 +214,9 @@ Javelin.AttackFunction = function(Player : Player)
                 return
             end
 
-            NewJavelin:PivotTo(NewJavelin:GetPivot() + NewJavelin:GetPivot().LookVector * 2)
+            RunService.Heartbeat:Wait()
 
-            task.wait()
+            NewJavelin:PivotTo(NewJavelin:GetPivot() + NewJavelin:GetPivot().LookVector)
 
             local Elapsed = tick() - StartTime
             if Elapsed >= LIFETIME then

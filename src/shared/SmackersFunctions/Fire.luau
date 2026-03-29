@@ -162,6 +162,8 @@ Firish.AttackFunction = function(Player : Player)
         task.delay(10, function()
             TouchConnection:Disconnect()
         end)
+    else
+        AreaOfFire.Position = Vector3.new(math.huge, math.huge, math.huge)
     end
 
     AnimTrack.Ended:Wait()

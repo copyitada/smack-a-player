@@ -8,10 +8,13 @@ local Teams = game:GetService("Teams")
 local CombatServiceServer = require(ServerScriptService.Server.Services.CombatService.CombatServiceServer)
 local EffectServiceServer = require(ServerScriptService.Server.Services.EffectService.EffectServiceServer)
 local RoundServiceServer = require(ServerScriptService.Server.Services.RoundService.RoundServiceServer)
+local ShopServiceServer = require(ServerScriptService.Server.Services.ShopService.ShopServiceServer)
 local ToolServiceServer = require(ServerScriptService.Server.Services.ToolService.ToolServiceServer)
 local ValueServiceServer = require(ServerScriptService.Server.Services.ValueService.ValueServiceServer)
 local DistributeTool = {}
 local Networker = require(ReplicatedStorage.Packages.Networker)
+local ShopServiceClient = require(ReplicatedStorage.Shared.Services.ShopService.ShopServiceClient)
+local ToolServiceUtils = require(ReplicatedStorage.Shared.Services.ToolService.ToolServiceUtils)
 local ToolDebounces = {}
 
 local RawValues = ServerStorage:FindFirstChild("Values")
@@ -101,11 +104,32 @@ function DistributeTool:SpecialAttack(Player)
 end
 
 function DistributeTool:Information(Player)
-    return ToolServiceServer.GetInformation(Player)
+    return ToolServiceUtils.GetInformation(Player)
 end
 
 function DistributeTool:Sparkle(Player : Player, Color : Color3)
     EffectServiceServer.Sparkle(Player, Color)
+end
+
+function DistributeTool:DisplayItem(Player : Player, SmackerName)
+    local Tool : Tool = ServerStorage.Smackers:FindFirstChild(SmackerName)
+    if not Tool then return end
+
+    local PlayerGui = Player.PlayerGui
+    local Shop = PlayerGui.Shop
+    local MainFrame = Shop.MainFrame
+    local Description = MainFrame.Description
+    local ViewportFrame = Description.ViewportFrame
+
+    ShopServiceClient.DisplayItem(ViewportFrame, Tool)
+end
+
+function DistributeTool:UnlockSmacker(Player : Player, SmackerName)
+    return ShopServiceServer.UnlockSmacker(Player, SmackerName)
+end
+
+function DistributeTool:HasUnlockedSmacker(Player : Player, SmackerName)
+    return ShopServiceServer.HasUnlockedSmacker(Player, SmackerName)
 end
 
 function DistributeTool.Init()
@@ -117,6 +141,12 @@ function DistributeTool.Init()
         DistributeTool.SpecialAttack,
         DistributeTool.Information,
         DistributeTool.Sparkle
+    })
+
+    Networker.server.new("Shop", DistributeTool, {
+        DistributeTool.DisplayItem,
+        DistributeTool.UnlockSmacker,
+        DistributeTool.HasUnlockedSmacker
     })
 
     for _, Player in Players:GetPlayers() do
