@@ -80,19 +80,21 @@ function ShopServiceClient.ButtonTrigger(Player : Player, Button : TextButton, D
     ShopServiceClient.ClickEffect(Button, true)
     local Unlock = Description:FindFirstChild("Unlock")
     local Price = Description:FindFirstChild("Price")
+
+    local SmackerName = Button.Name
     -- local ViewportFrame = Description:FindFirstChild("ViewportFrame")
 
     Unlock.BuyButton.Text = "..."
 
-    local SmackerInformation : SmackerInformation = ToolServiceUtils.GetInformation(nil, Button.Name)
+    local SmackerInformation : SmackerInformation = ToolServiceUtils.GetInformation(nil, SmackerName)
     Price.Text = SmackerInformation.Shop.Price .. " Smacks"
 
     local ViewportFrame = Description:FindFirstChild("ViewportFrame")
 
     ShopServiceClient.HideEveryItem(ViewportFrame)
-    Networker.client.new("Shop", ShopServiceClient):fire("DisplayItem", Button.Name)
+    Networker.client.new("Shop", ShopServiceClient):fire("DisplayItem", SmackerName)
 
-    local ItemUnlocked = Networker.client.new("Shop", ShopServiceClient):fetch("HasUnlockedSmacker", Button.Name)
+    local ItemUnlocked = Networker.client.new("Shop", ShopServiceClient):fetch("HasUnlockedSmacker", SmackerName)
     print(ItemUnlocked)
 
     if ItemUnlocked then
@@ -103,9 +105,9 @@ function ShopServiceClient.ButtonTrigger(Player : Player, Button : TextButton, D
     end
 
     local Values = Player:FindFirstChild("Values")
-    local SmackerName = Values.SmackerName
+    local ValuesSmackerName = Values.SmackerName
 
-    if SmackerName.Value == Button.Name then
+    if ValuesSmackerName.Value == Button.Name then
         Unlock.BuyButton.Text = "Equipped"
     end
 

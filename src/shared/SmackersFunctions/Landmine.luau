@@ -41,6 +41,14 @@ local function DashFunction(Character)
     LinearVelocity.VectorVelocity = Direction * 100 -- dash speed
     LinearVelocity.Parent = RootPart
 
+    task.spawn(function()
+        while LinearVelocity do
+            task.wait()
+            Direction = RootPart.CFrame.LookVector
+            LinearVelocity.VectorVelocity = Direction * 100 -- dash speed
+        end
+    end)
+
     Debris:AddItem(LinearVelocity, .5)
 end
 
@@ -70,7 +78,7 @@ Landmine.AttackFunction = function(Player : Player)
     if SpecialAttackDebounces[Humanoid] then return false end
     SpecialAttackDebounces[Humanoid] = true
 
-    task.delay(25, function()
+    task.delay(15, function()
         SpecialAttackDebounces[Humanoid] = nil
     end)
 
@@ -81,7 +89,7 @@ Landmine.AttackFunction = function(Player : Player)
     RootPartAction(Character.PrimaryPart)
     DashFunction(Character)
 
-    TouchConnection = Tool.Mine.Touched:Connect(function(Hit)
+    TouchConnection = Tool.LandmineHitbox.Touched:Connect(function(Hit)
         if not Hit then return end
         if not Hit:IsA("BasePart") then return end
         if not Hit.Position then return end
@@ -104,6 +112,7 @@ Landmine.AttackFunction = function(Player : Player)
         Debris:AddItem(Explode, Explode.TimeLength + .1)
 
         local VictimHumanoid = Hit.Parent:FindFirstChild("Humanoid")
+
         if VictimHumanoid and not HumanoidDebounces[VictimHumanoid] then
             HumanoidDebounces[VictimHumanoid] = true
 
@@ -115,17 +124,48 @@ Landmine.AttackFunction = function(Player : Player)
                 PlayerValues.Attacker.Value = Player.Name
             end
 
-            VictimHumanoid:TakeDamage(50)
+            local RagdollTrigger = VictimCharacter:FindFirstChild("RagdollTrigger")
+            if RagdollTrigger then
+                RagdollTrigger.Value = true
+                task.delay(2.5, function()
+                    RagdollTrigger.Value = false
+                end)
+            end
+
+            VictimHumanoid:TakeDamage(60)
+        end
+
+        VictimHumanoid = Hit.Parent.Parent:FindFirstChild("Humanoid")
+        if VictimHumanoid and not HumanoidDebounces[VictimHumanoid] then
+            HumanoidDebounces[VictimHumanoid] = true
+
+            local VictimCharacter = VictimHumanoid.Parent
+            local VictimPlayer = Players:GetPlayerFromCharacter(VictimCharacter)
+
+            if VictimPlayer then
+                local PlayerValues = ValueServiceServer.GetValues(VictimPlayer)
+                PlayerValues.Attacker.Value = Player.Name
+            end
+
+            local RagdollTrigger = VictimCharacter:FindFirstChild("RagdollTrigger")
+            if RagdollTrigger then
+                RagdollTrigger.Value = true
+                task.delay(2.5, function()
+                    RagdollTrigger.Value = false
+                end)
+            end
+
+            VictimHumanoid:TakeDamage(55)
         end
 
         if not HumanoidDebounces[Humanoid] then
             HumanoidDebounces[Humanoid] = true
 
-            Humanoid:TakeDamage(50)
+            Humanoid:TakeDamage(40)
         end
     end)
 
-    task.delay(.5, function()
+    task.delay(.75, function()
         TouchConnection:Disconnect()
     end)
 

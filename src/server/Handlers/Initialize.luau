@@ -35,7 +35,7 @@ local function PlayerAdded(Player : Player)
         task.wait()
         Attacker.Value = ""
 
-        if Player.Team.Name == "Lobby" then return end
+        -- if Player.Team.Name == "Lobby" then return end
         local SmackerInstance = ServerStorage.Smackers:FindFirstChild(SmackerName.Value) or ServerStorage.Smackers.Default
 
         local SmackerTool = SmackerInstance:Clone()

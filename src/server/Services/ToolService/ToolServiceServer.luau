@@ -22,6 +22,8 @@ function ToolService.InitializeSmacker(Player : Player, Tool)
     local Values = Player:FindFirstChild("Values")
     local Smacks = Values.RoundStats:FindFirstChild("Smacks")
 
+    local SmackerInformation = ToolServiceUtils.GetInformation(Player)
+
     local PrimaryPart = Tool:FindFirstChild("EvadeTaxes")
 
     local SmackAnimation : Animation = Instance.new("Animation")
@@ -30,9 +32,8 @@ function ToolService.InitializeSmacker(Player : Player, Tool)
     SmackAnimation.AnimationId = "rbxassetid://136511099213466"
 
     local AnimTrack = Animator:LoadAnimation(SmackAnimation)
-    local TouchConnection
 
-    local SmackerInformation = ToolServiceUtils.GetInformation(Player)
+    local TouchConnection
 
     Tool.Activated:Connect(function()
         if not ToolService.CheckEligibility(Player) then return end
@@ -52,6 +53,12 @@ function ToolService.InitializeSmacker(Player : Player, Tool)
 
         if ToolDebounces[Humanoid] then return end
         ToolDebounces[Humanoid] = true
+
+        AnimTrack:Play()
+        AnimTrack:AdjustSpeed(SmackerInformation.Smack.AnimationSpeed)
+
+        AnimTrack:GetMarkerReachedSignal("Hit"):Wait()
+        AnimTrack:AdjustSpeed(Tool.Name == "Tank" and 2 or SmackerInformation.Smack.AnimationSpeed)
 
         TouchConnection = PrimaryPart.Touched:Connect(function(Hit)
             local VictimHumanoid = Hit.Parent:FindFirstChild("Humanoid")
@@ -104,8 +111,11 @@ function ToolService.InitializeSmacker(Player : Player, Tool)
         SwingCloneSound.Parent = Character:FindFirstChild("HumanoidRootPart")
         SwingCloneSound:Play()
 
-        AnimTrack:Play()
-        AnimTrack.Ended:Wait()
+        if Tool.Name ~= "Mini" then
+            AnimTrack.Ended:Wait()
+        else
+            AnimTrack.Stopped:Wait()
+        end
 
         TouchConnection:Disconnect()
         for _, Trail in PrimaryPart:GetChildren() do

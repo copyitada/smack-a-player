@@ -63,12 +63,13 @@ Stealth.AttackFunction = function(Player : Player)
         end
 
         if not BasePart:IsA("BasePart") then continue end
+        if BasePart.Transparency >= 1 then continue end
         table.insert(TransparencyLists, {
             key = BasePart,
             value = BasePart.Transparency
         })
 
-        BasePart.Transparency = 1
+        BasePart.Transparency = .95
     end
 
     task.delay(10, function()

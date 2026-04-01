@@ -53,7 +53,6 @@ local MoneyUINewRotation = 10
 local MoneyUIOldPosition = MoneyUI.Position
 local MoneyUIOldRotation = 0
 
-local Running = false
 local IsDead = false
 
 local Networker = require(ReplicatedStorage.Packages.Networker)
@@ -144,10 +143,8 @@ local function Block()
     end
 end
 
-local function InputBegan(Input)
-    if Input.KeyCode == Enum.KeyCode.W then
-        Running = true
-	end
+local function InputBegan(Input, GameProcessed)
+    if GameProcessed then return end
 
     if Input.KeyCode == Enum.KeyCode.F then
         Block()
@@ -155,12 +152,6 @@ local function InputBegan(Input)
 
     if Input.KeyCode == Enum.KeyCode.R and not SpecialAttackDebounce then
         SpecialAttack()
-    end
-end
-
-local function InputEnded(Input)
-    if Input.KeyCode == Enum.KeyCode.W then
-        Running = false
     end
 end
 
@@ -181,7 +172,7 @@ local function RenderStepped()
     end
 
     if not Humanoid.Parent:FindFirstChild("Blocking") and not Humanoid.Parent:FindFirstChild("Stunned") then
-        if Running then
+        if UserInputService:IsKeyDown(Enum.KeyCode.W) then
             Humanoid.WalkSpeed = 20
         else
             Humanoid.WalkSpeed = 16
@@ -273,7 +264,6 @@ end
 
 function InputController.Init()
     UserInputService.InputBegan:Connect(InputBegan)
-    UserInputService.InputEnded:Connect(InputEnded)
 
     ContextActionService:BindAction("Block", function(_, InputState)
         if InputState ~= Enum.UserInputState.Begin then return end

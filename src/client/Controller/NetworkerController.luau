@@ -42,6 +42,21 @@ function NetworkerController.Init()
         Debris:AddItem(SoundClone, SoundClone.TimeLength + .1)
     end)
 
+    ReplicatedStorage.Remotes.Blink.OnClientEvent:Connect(function()
+        local ColorCorrection : ColorCorrectionEffect = game.Lighting.ColorCorrection
+        ColorCorrection.TintColor = Color3.fromRGB(0,0,0)
+
+        task.wait(.1)
+
+        ColorCorrection.TintColor = Color3.fromRGB(255,0,0)
+        ColorCorrection.Brightness = -.5
+
+        task.wait(.05)
+
+        ColorCorrection.TintColor = Color3.fromRGB(255,255,255)
+        ColorCorrection.Brightness = 0
+    end)
+
     Networker.client.new("ToolInputs", NetworkerController)
 end
 

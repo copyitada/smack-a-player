@@ -34,9 +34,43 @@ return {
         }
     },
     {
-        SmackerName = "Fire",
+        SmackerName = "Tank",
         Shop = {
             Price = 25
+        },
+        Smack = {
+            Damage = 10,
+            KnockbackSpeed = 45,
+            KnockbackUp = 45,
+            AnimationSpeed = .25,
+        },
+        Attack = {
+            AttackName = "Heavy Smash",
+            AttackDuration = 8,
+            AttackDebounce = 40,
+        }
+    },
+    {
+        SmackerName = "Mini",
+        Shop = {
+            Price = 25
+        },
+        Smack = {
+            Damage = 2,
+            KnockbackSpeed = 6,
+            KnockbackUp = 4,
+            AnimationSpeed = 4,
+        },
+        Attack = {
+            AttackName = "Light Smash",
+            AttackDuration = 1,
+            AttackDebounce = 5,
+        }
+    },
+    {
+        SmackerName = "Fire",
+        Shop = {
+            Price = 50
         },
         Smack = {
             Damage = 7,
@@ -53,7 +87,7 @@ return {
     {
         SmackerName = "Ice",
         Shop = {
-            Price = 50
+            Price = 75
         },
         Smack = {
             Damage = 7,
@@ -132,7 +166,41 @@ return {
         Attack = {
             AttackName = "Explode",
             AttackDuration = .5,
-            AttackDebounce = 25,
+            AttackDebounce = 15,
+        }
+    },
+    {
+        SmackerName = "Blink",
+        Shop = {
+            Price = 1250
+        },
+        Smack = {
+            Damage = 7,
+            KnockbackSpeed = 30,
+            KnockbackUp = 15,
+            AnimationSpeed = 1,
+        },
+        Attack = {
+            AttackName = "Teleport",
+            AttackDuration = .5,
+            AttackDebounce = 5,
+        }
+    },
+    {
+        SmackerName = "Magnet",
+        Shop = {
+            Price = 2000
+        },
+        Smack = {
+            Damage = 7,
+            KnockbackSpeed = 30,
+            KnockbackUp = 15,
+            AnimationSpeed = 1,
+        },
+        Attack = {
+            AttackName = "Pull",
+            AttackDuration = 1,
+            AttackDebounce = 10,
         }
     },
 }
