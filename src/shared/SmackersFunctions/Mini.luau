@@ -54,7 +54,7 @@ Default.AttackFunction = function(Player : Player)
     Animation.AnimationId = "rbxassetid://83138996215724"
 
     local AnimTrack : AnimationTrack  = Humanoid.Animator:LoadAnimation(Animation)
-    local Tool = Player.Backpack:FindFirstChild("Default") or Character:FindFirstChild("Default")
+    local Tool = Player.Backpack:FindFirstChild("Mini") or Character:FindFirstChild("Mini")
 
     local TouchConnection
     local PrimaryPart = Tool:FindFirstChild("EvadeTaxes")

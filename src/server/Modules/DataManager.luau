@@ -2,14 +2,23 @@ local DataManager = {}
 
 DataManager.Profiles = {}
 
-function DataManager.AddSmacks(Player)
+function DataManager.AddSmacks(Player, Amount : number?)
     local Profile = DataManager.Profiles[Player]
     if not Profile then return end
 
-    Profile.Data.Smacks += 1
+    if not Amount then
+        Profile.Data.Smacks += 1
+    else
+        Profile.Data.Smacks += Amount
+    end
+
     local leaderstats = Player:FindFirstChild("leaderstats")
     if leaderstats then
-        leaderstats.Smacks.Value += 1
+        if not Amount then
+            leaderstats.Smacks.Value += 1
+        else
+            leaderstats.Smacks.Value += Amount
+        end
     end
 end
 

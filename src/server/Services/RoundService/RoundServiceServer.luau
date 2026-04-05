@@ -3,6 +3,7 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local RunService = game:GetService("RunService")
 local ServerScriptService = game:GetService("ServerScriptService")
 local ServerStorage = game:GetService("ServerStorage")
+local SoundService = game:GetService("SoundService")
 local Teams = game:GetService("Teams")
 
 local CombatServiceServer = require(ServerScriptService.Server.Services.CombatService.CombatServiceServer)
@@ -200,6 +201,9 @@ function RoundServiceServer.Start()
     end)
 
     task.wait(2)
+
+    local MatchSongs = SoundService:GetChildren()
+    MatchSongs[math.random(1, #MatchSongs)]:Play()
 
     Caption.Value = "Game ends in:"
     for i = ROUND_DURATION * 10, 1, -1 do

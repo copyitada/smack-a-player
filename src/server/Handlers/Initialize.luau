@@ -1,12 +1,15 @@
 workspace.AnimationRigs:Destroy()
 
+local MarketplaceService = game:GetService("MarketplaceService")
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local RunService = game:GetService("RunService")
 local ServerScriptService = game:GetService("ServerScriptService")
 local ServerStorage = game:GetService("ServerStorage")
 local Teams = game:GetService("Teams")
 local CombatServiceServer = require(ServerScriptService.Server.Services.CombatService.CombatServiceServer)
 local EffectServiceServer = require(ServerScriptService.Server.Services.EffectService.EffectServiceServer)
+local PurchaseService = require(ServerScriptService.Server.Services.PurchaseService.PurchaseService)
 local RoundServiceServer = require(ServerScriptService.Server.Services.RoundService.RoundServiceServer)
 local ShopServiceServer = require(ServerScriptService.Server.Services.ShopService.ShopServiceServer)
 local ToolServiceServer = require(ServerScriptService.Server.Services.ToolService.ToolServiceServer)
@@ -35,7 +38,7 @@ local function PlayerAdded(Player : Player)
         task.wait()
         Attacker.Value = ""
 
-        -- if Player.Team.Name == "Lobby" then return end
+        if not RunService:IsStudio() and Player.Team.Name == "Lobby" then return end
         local SmackerInstance = ServerStorage.Smackers:FindFirstChild(SmackerName.Value) or ServerStorage.Smackers.Default
 
         local SmackerTool = SmackerInstance:Clone()
@@ -66,7 +69,9 @@ local function PlayerAdded(Player : Player)
                 local AttackerKills = AttackerRoundStats:FindFirstChild("Kills")
                 if not AttackerKills then return end
 
-                AttackerKills.Value += 1
+                if AttackerPlayer ~= Player then
+                    AttackerKills.Value += 1
+                end
             end)
             Character.Humanoid:EquipTool(SmackerTool)
         end
@@ -80,6 +85,13 @@ function OnServerInvoke(Player : Player, SmackerName)
 
     ToolServiceServer.EquipSmacker(Player, SmackerName)
     return true
+end
+
+function OnServerEvent(Player : Player, Enable)
+    if Player.Team.Name == "Playing" then return end
+
+    local Values = ValueServiceServer.GetValues(Player)
+    Values.AFK.Value = Enable or not Values.AFK.Value
 end
 
 function DistributeTool:Block(Player : Player)
@@ -98,6 +110,7 @@ function DistributeTool:SpecialAttack(Player)
     if ToolDebounces[Humanoid] then return end
 
     local SmackerName = Player:FindFirstChild("Values"):FindFirstChild("SmackerName")
+    if not ReplicatedStorage.Shared.SmackersFunctions[SmackerName.Value] then return end 
 
     local Result = require(ReplicatedStorage.Shared.SmackersFunctions[SmackerName.Value]).AttackFunction(Player)
     return Result
@@ -134,7 +147,10 @@ end
 
 function DistributeTool.Init()
     ReplicatedStorage.Remotes.ChangeSmacker.OnServerInvoke = OnServerInvoke
+    ReplicatedStorage.Remotes.ToggleAFK.OnServerEvent:Connect(OnServerEvent)
     Players.PlayerAdded:Connect(PlayerAdded)
+
+    MarketplaceService.ProcessReceipt = PurchaseService.ProcessReceipt
 
     Networker.server.new("ToolInputs", DistributeTool, {
         DistributeTool.Block,

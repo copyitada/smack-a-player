@@ -29,6 +29,9 @@ local Humanoid = Character and Character:FindFirstChild("Humanoid")
 local RootPart = Character and Character:FindFirstChild("HumanoidRootPart")
 local Camera = workspace.CurrentCamera
 
+local Values = Player:WaitForChild("Values")
+local Spectating = Values:WaitForChild("Spectating")
+
 local LastTime = 0
 
 local Loaded = Player:WaitForChild("Values"):WaitForChild("Loaded")
@@ -42,16 +45,10 @@ local TickingSound = ReplicatedStorage["tick"]
 local TimerUI = PlayerUI.ToolUI.Topbar.Timer
 local CaptionUI = PlayerUI.ToolUI.Topbar.Caption
 
-local CooldownList = PlayerUI.ToolUI.CooldownList
+local CooldownList = PlayerUI.Cooldown.CooldownList
 local CooldownBarRaw = ReplicatedStorage:FindFirstChild("CooldownBar")
 
-local MoneyUI = PlayerUI.ToolUI.Money
-
-local MoneyUINewPosition = MoneyUI.Position + UDim2.fromScale(0, -0.05)
-local MoneyUINewRotation = 10
-
-local MoneyUIOldPosition = MoneyUI.Position
-local MoneyUIOldRotation = 0
+local MoneyUI = PlayerUI.ToolUI.SidePanel.Money
 
 local IsDead = false
 
@@ -203,9 +200,11 @@ local function RenderStepped()
 
 	if not IsDead then
         Camera.CameraType = Enum.CameraType.Custom
-        Camera.CameraSubject = Humanoid
-
-        Humanoid.CameraOffset = Humanoid.CameraOffset:Lerp((RootPart.CFrame+Vector3.new(0,1.5,0)):pointToObjectSpace(Head.CFrame.p),0.5)
+        if not Spectating.Value then
+            Camera.CameraSubject = Humanoid
+            Humanoid.CameraOffset = Humanoid.CameraOffset:Lerp((RootPart.CFrame+Vector3.new(0,1.5,0)):pointToObjectSpace(Head.CFrame.p),0.5)
+        end
+        
         LastHeadCFrame = Head.CFrame
     elseif LastHeadCFrame then
         Camera.CameraType = Enum.CameraType.Scriptable
@@ -282,19 +281,13 @@ function InputController.Init()
     Player.CharacterAdded:Connect(CharacterAdded)
 
     if not Loaded.Value then
-        MoneyUI.Text = "Fetching profile..."
+        MoneyUI.Text = "$0"
     end
 
     Player:WaitForChild("leaderstats").Smacks:GetPropertyChangedSignal("Value"):Connect(function()
         Loaded.Value = true
-
-        MoneyUI.Position = MoneyUINewPosition
-        MoneyUI.Rotation = MoneyUINewRotation
         MoneyUI.Text = "$" .. Player.leaderstats.Smacks.Value
         -- MoneyUI.TextColor3 = Color3.fromRGB(255, 255, 0)
-
-        -- TweenService:Create(MoneyUI, TweenInfo.new(0.5, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), { TextColor3 = Color3.fromRGB(86, 255, 86) }):Play()
-        TweenService:Create(MoneyUI, TweenInfo.new(0.5, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), { Position = MoneyUIOldPosition, TextColor3 = Color3.fromRGB(86, 255, 86), Rotation = MoneyUIOldRotation }):Play()
     end)
 
     if Head then

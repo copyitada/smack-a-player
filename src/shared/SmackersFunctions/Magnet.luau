@@ -15,7 +15,7 @@ local SpecialAttackDebounces = {}
 
 local function IsPlayerInfront(VictimCharacter, ThrowingCharacter)
     local Direction = (VictimCharacter:GetPivot().Position - ThrowingCharacter:GetPivot().Position).Unit
-    return ThrowingCharacter:GetPivot().LookVector:Dot(Direction) > 0.8
+    return ThrowingCharacter:GetPivot().LookVector:Dot(Direction) > .5
 end
 
 local function MoveCharacter(Character, TargetCFrame, Duration)
@@ -103,7 +103,7 @@ Magnet.AttackFunction = function(Player : Player)
         if not IsPlayerInfront(VictimCharacter, Character) then continue end
 
         local Distance = (Character:GetPivot().Position - VictimCharacter:GetPivot().Position).Magnitude
-        if Distance < 15 and Distance < ClosestDistance then
+        if Distance < 100 and Distance < ClosestDistance then
             PlayerClosestInfront = VictimCharacter
             ClosestDistance = Distance
         end
@@ -119,7 +119,7 @@ Magnet.AttackFunction = function(Player : Player)
             if not IsPlayerInfront(Dummy, Character) then continue end
 
             local Distance = (Character:GetPivot().Position - Dummy:GetPivot().Position).Magnitude
-            if Distance < 15 and Distance < ClosestDistance then
+            if Distance < 100 and Distance < ClosestDistance then
                 PlayerClosestInfront = Dummy
                 ClosestDistance = Distance
             end
@@ -129,6 +129,8 @@ Magnet.AttackFunction = function(Player : Player)
     local Bassdrop = BassdropSound:Clone()
     Bassdrop.Parent = RootPart
     Bassdrop:Play()
+
+    AnimTrack:Play()
 
     task.wait(1)
 

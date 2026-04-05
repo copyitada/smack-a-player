@@ -1,5 +1,7 @@
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
+local ServerScriptService = game:GetService("ServerScriptService")
+local ValueServiceServer = require(ServerScriptService.Server.Services.ValueService.ValueServiceServer)
 local RoundServiceUtils = {}
 
 RoundServiceUtils.Settings = {
@@ -22,6 +24,8 @@ local RequiredPlayers = RunService:IsStudio() and SettingsRequiredPlayers.STUDIO
 
 function RoundServiceUtils.ActionToAllPlayers(func)
     for _, Player in Players:GetPlayers() do
+        if ValueServiceServer.GetValues(Player).AFK.Value then continue end
+
         pcall(function()
             func(Player)  
         end)

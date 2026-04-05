@@ -24,6 +24,9 @@ local Click = ReplicatedStorage.click
 local Buy = ReplicatedStorage.buy
 local Fail = ReplicatedStorage.fail
 
+local UnlockConnection = {}
+local InfoConnection = {}
+
 local ShopServiceClient = {}
 
 local function Notification(NTitle, NDescription)
@@ -33,6 +36,10 @@ local function Notification(NTitle, NDescription)
 		Icon = "http://www.roblox.com/asset/?id=109683743467986"
 	})
 	ReplicatedStorage["notification_ping"]:Play()
+end
+
+function CalculatePower(KnockbackSpeed, KnockbackUp)
+    return math.ceil((math.sqrt(KnockbackSpeed^2 + KnockbackUp^2))/5)*5
 end
 
 function ShopServiceClient.GetInterface(Player : Player)
@@ -77,8 +84,17 @@ function ShopServiceClient.HoverLeave(Button : TextButton)
 end
 
 function ShopServiceClient.ButtonTrigger(Player : Player, Button : TextButton, Description : Frame)
+    if UnlockConnection[Player] then
+        UnlockConnection[Player]:Disconnect()
+    end
+    if InfoConnection[Player] then
+        InfoConnection[Player]:Disconnect()
+    end
+
     ShopServiceClient.ClickEffect(Button, true)
     local Unlock = Description:FindFirstChild("Unlock")
+    local Info = Description:FindFirstChild("Information")
+    local SmackerDescription = Description.Parent and Description.Parent:FindFirstChild("SmackerDescription")
     local Price = Description:FindFirstChild("Price")
 
     local SmackerName = Button.Name
@@ -86,7 +102,7 @@ function ShopServiceClient.ButtonTrigger(Player : Player, Button : TextButton, D
 
     Unlock.BuyButton.Text = "..."
 
-    local SmackerInformation : SmackerInformation = ToolServiceUtils.GetInformation(nil, SmackerName)
+    local SmackerInformation = ToolServiceUtils.GetInformation(nil, SmackerName)
     Price.Text = SmackerInformation.Shop.Price .. " Smacks"
 
     local ViewportFrame = Description:FindFirstChild("ViewportFrame")
@@ -111,7 +127,27 @@ function ShopServiceClient.ButtonTrigger(Player : Player, Button : TextButton, D
         Unlock.BuyButton.Text = "Equipped"
     end
 
-    Unlock.MouseButton1Click:Connect(function()
+    local Information = SmackerInformation.Shop.Information
+    SmackerDescription.Title.Text = SmackerName
+
+    local Power
+    if SmackerName == "Dice" then
+        Power = "10-60"
+    else
+        Power = CalculatePower(SmackerInformation.Smack.KnockbackSpeed, SmackerInformation.Smack.KnockbackUp)
+    end
+
+    SmackerDescription.Description.Text = Information.Description .. "\n\nDAMAGE : " .. Information.Damage .. "\nPOWER : " .. Power
+
+    SmackerDescription.Ability.Title.Text = Information.Ability.Title
+    SmackerDescription.Ability.Description.Text = Information.Ability.Description
+
+    InfoConnection[Player] = Info.MouseButton1Click:Connect(function()
+        ShopServiceClient.ClickEffect(Info, true)
+        SmackerDescription.Visible = not SmackerDescription.Visible
+    end)
+
+    UnlockConnection[Player] = Unlock.MouseButton1Click:Connect(function()
         if Unlock.BuyButton.Text == "Unlock" then
             local Eligible = Networker.client.new("Shop", ShopServiceClient):fetch("UnlockSmacker", Button.Name)
             if Eligible then

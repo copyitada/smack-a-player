@@ -86,7 +86,12 @@ function ToolService.InitializeSmacker(Player : Player, Tool)
             ReplicatedStorage.Remotes.ShakeOnce:FireClient(Player, 5, 10, .1, .4)
 
             VictimCharacter.RagdollTrigger.Value = true
-            VictimHumanoid:TakeDamage(SmackerInformation.Smack.Damage)
+
+            local Damage = SmackerInformation.Smack.Damage
+            if typeof(Damage) == "function" then
+                Damage = SmackerInformation.Smack.Damage()
+            end
+            VictimHumanoid:TakeDamage(Damage)
 
             Smacks.Value += 1
             DataManager.AddSmacks(Player)
@@ -100,6 +105,14 @@ function ToolService.InitializeSmacker(Player : Player, Tool)
 
             local KnockbackSpeed = SmackerInformation.Smack.KnockbackSpeed
             local KnockbackUp = SmackerInformation.Smack.KnockbackUp
+            
+            if typeof(KnockbackSpeed) == "function" then
+                KnockbackSpeed = SmackerInformation.Smack.KnockbackSpeed()
+            end
+            if typeof(KnockbackUp) == "function" then
+                KnockbackUp = SmackerInformation.Smack.KnockbackUp()
+            end
+
             KnockbackServiceServer.Apply(VictimCharacter:FindFirstChild("HumanoidRootPart"), Pivot, KnockbackSpeed, KnockbackUp)
 
             task.delay(1.5, function()
