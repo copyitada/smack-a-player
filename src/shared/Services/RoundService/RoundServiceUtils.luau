@@ -33,7 +33,15 @@ function RoundServiceUtils.ActionToAllPlayers(func)
 end
 
 function RoundServiceUtils.CheckPlayers()
-    if #Players:GetPlayers() < RequiredPlayers then
+    local PlayingPlayers = Players:GetPlayers()
+    local NotAFK = {}
+
+    for _, Player in PlayingPlayers do
+        if ValueServiceServer.GetValues(Player).AFK.Value then continue end
+        table.insert(NotAFK, Player)
+    end
+
+    if #NotAFK < RequiredPlayers then
         return false
     else
         return true

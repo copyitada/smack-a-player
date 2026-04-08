@@ -155,7 +155,7 @@ function RoundServiceServer.Start()
 
     Caption.Value = "Intermission..."
 
-    for i = INTERMISSION_TIMER, 0, -1 do
+    for i = INTERMISSION_TIMER, 1, -1 do
         if not RoundServiceUtils.CheckPlayers() then return end
 
         task.wait(1)
@@ -164,8 +164,6 @@ function RoundServiceServer.Start()
 
     if not RoundServiceUtils.CheckPlayers() then return end
 
-    Caption.Value = "..."
-
     for _, Object in workspace.StreamParts:GetChildren() do
         Object:Destroy()
     end
@@ -173,8 +171,6 @@ function RoundServiceServer.Start()
     local Maps = ServerStorage.Maps:GetChildren()
     local Map = Maps[math.random(1, #Maps)]:Clone()
     Map.Parent = workspace.StreamParts
-
-    task.wait(1)
 
     RoundServiceUtils.ActionToAllPlayers(function(Player : Player)
         Player.Team = Teams.Playing
@@ -189,6 +185,7 @@ function RoundServiceServer.Start()
         end
 
         local Character = Player.Character or Player.CharacterAdded:Wait()
+        Character.PrimaryPart.Anchored = true
         task.wait()
 
         local Humanoid = Character:FindFirstChild("Humanoid")
@@ -200,7 +197,18 @@ function RoundServiceServer.Start()
         CombatServiceServer.Stun(Character, 2)
     end)
 
-    task.wait(2)
+    Caption.Value = "Map Name: " .. Map.Name
+    for i = 3, 1, -1 do
+        if not RoundServiceUtils.CheckPlayers() then return end
+
+        task.wait(1)
+        Timer.Value = i
+    end
+
+    RoundServiceUtils.ActionToAllPlayers(function(Player : Player)
+        local Character = Player.Character or Player.CharacterAdded:Wait()
+        Character.PrimaryPart.Anchored = false
+    end)
 
     local MatchSongs = SoundService:GetChildren()
     MatchSongs[math.random(1, #MatchSongs)]:Play()

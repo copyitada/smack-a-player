@@ -19,6 +19,7 @@ local Networker = require(ReplicatedStorage.Packages.Networker)
 local ShopServiceClient = require(ReplicatedStorage.Shared.Services.ShopService.ShopServiceClient)
 local ToolServiceUtils = require(ReplicatedStorage.Shared.Services.ToolService.ToolServiceUtils)
 local ToolDebounces = {}
+local DeathDebounce = {}
 
 local RawValues = ServerStorage:FindFirstChild("Values")
 
@@ -68,6 +69,17 @@ local function PlayerAdded(Player : Player)
 
                 local AttackerKills = AttackerRoundStats:FindFirstChild("Kills")
                 if not AttackerKills then return end
+
+                if DeathDebounce[Player] then return end
+
+                DeathDebounce[Player] = true
+                task.delay(2.5, function()
+                    DeathDebounce[Player] = nil
+                end)
+
+                if AttackerPlayer.Team == Teams.Playing and Player.Team == Teams.Playing then
+                    ReplicatedStorage.Remotes.ShowKilled:FireAllClients(AttackerPlayer, Player)
+                end
 
                 if AttackerPlayer ~= Player then
                     AttackerKills.Value += 1
