@@ -85,7 +85,20 @@ local function PlayerAdded(Player : Player)
                     AttackerKills.Value += 1
                 end
             end)
+
             Character.Humanoid:EquipTool(SmackerTool)
+
+            task.wait(1)
+            if SmackerTool.Name == "Whip" then
+                for _, Segment in SmackerTool.Segment:GetChildren() do
+                    Segment.CFrame = Character:GetPivot()
+                end
+                for _, RopeConstraint in SmackerTool:GetDescendants() do
+                    if not RopeConstraint:IsA("RopeConstraint") then continue end
+
+                    RopeConstraint.Enabled = true
+                end
+            end
         end
 
         ToolServiceServer.InitializeSmacker(Player, SmackerTool)

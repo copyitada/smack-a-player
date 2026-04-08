@@ -330,6 +330,33 @@ return {
         }
     },
     {
+        SmackerName = "Whip",
+        Shop = {
+            Price = 1250,
+            Information = {
+                Description = "A whip-shaped smacker, interesting concept along with landmine. Don't try to do your interesting ideas with the \"smacker\".",
+                Ability = {
+                    Title = "Big Whip",
+                    Description = "Do a big whip."
+                },
+                Damage = "7",
+                KnockbackSpeed = "30",
+                KnockbackUp = "15",
+            }
+        },
+        Smack = {
+            Damage = 7,
+            KnockbackSpeed = 30,
+            KnockbackUp = 15,
+            AnimationSpeed = 1,
+        },
+        Attack = {
+            AttackName = "Big Whip",
+            AttackDuration = .5,
+            AttackDebounce = 5,
+        }
+    },
+    {
         SmackerName = "Magnet",
         Shop = {
             Price = 2000,
