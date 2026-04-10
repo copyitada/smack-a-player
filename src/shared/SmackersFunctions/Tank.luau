@@ -3,46 +3,16 @@ local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local ServerScriptService = game:GetService("ServerScriptService")
 local ServerStorage = game:GetService("ServerStorage")
+local KnockbackServiceServer = require(ServerScriptService.Server.Services.KnockbackService.KnockbackServiceServer)
 local ValueServiceServer = require(ServerScriptService.Server.Services.ValueService.ValueServiceServer)
 
 -- script update
 
 local Tank = {}
 
-local PunchEffect = ServerStorage:FindFirstChild("HitFX").Punch
-local SmackSound = ServerStorage:FindFirstChild("snap.wav")
 local SwingSound = ServerStorage:FindFirstChild("swing")
 
 local SpecialAttackDebounces = {}
-
-local function RootPartAction(RootPart, CFrame : CFrame, Velocity : Vector3?)
-    local Vel = Velocity or Vector3.new(50, 0, 0)
-
-    local LinearVelocity = Instance.new("LinearVelocity")
-    LinearVelocity.Parent = RootPart
-    LinearVelocity.Attachment0 = RootPart:FindFirstChild("RootAttachment")
-    LinearVelocity.RelativeTo = Enum.ActuatorRelativeTo.Attachment0
-    LinearVelocity.MaxForce = math.huge
-    LinearVelocity.VectorVelocity = CFrame.RightVector * Vel.X + CFrame.UpVector * Vel.Y + CFrame.LookVector * Vel.Z
-
-    local EffectClone : Attachment = PunchEffect:Clone()
-    EffectClone.Parent = RootPart
-    EffectClone.WorldCFrame = RootPart.CFrame
-
-    for _, Particle in EffectClone:GetChildren() do
-        task.spawn(function()
-            Particle:Emit(Particle:GetAttribute("EmitCount"))
-        end)
-    end
-
-    local CloneSound : Sound = SmackSound:Clone()
-    CloneSound.Parent = RootPart
-    CloneSound:Play()
-
-    Debris:AddItem(CloneSound, 1)
-    Debris:AddItem(EffectClone, 1)
-    Debris:AddItem(LinearVelocity, 0.2)
-end
 
 Tank.AttackFunction = function(Player : Player)
     local Character = Player.Character
@@ -94,10 +64,7 @@ Tank.AttackFunction = function(Player : Player)
 
         local VictimPlayer = Players:GetPlayerFromCharacter(VictimCharacter)
 
-        if HumanoidDebounce[VictimHumanoid] then
-            warn("------------ " .. VictimCharacter.Name .. " already hit! ---------------")
-            return
-        end
+        if HumanoidDebounce[VictimHumanoid] then return end
         
         HumanoidDebounce[VictimHumanoid] = true
         ReplicatedStorage.Remotes.ShakeOnce:FireClient(Player, 10, 20, .4, 1.1)
@@ -135,8 +102,7 @@ Tank.AttackFunction = function(Player : Player)
             PlayerValues.Attacker.Value = Player.Name
         end
 
-        local Pivot : CFrame = Character:FindFirstChild("HumanoidRootPart").CFrame
-        RootPartAction(VictimCharacter:FindFirstChild("HumanoidRootPart"), Pivot)
+        KnockbackServiceServer.Apply(VictimCharacter:FindFirstChild("HumanoidRootPart"), Character, 20, 60)
 
         task.delay(2.5, function()
             VictimCharacter.RagdollTrigger.Value = false

@@ -89,8 +89,7 @@ Magnet.AttackFunction = function(Player : Player)
         ToolServiceServer.InitializeSmacker(Player, SmackerTool)
     end)
 
-    local PlayerClosestInfront : Model
-    local ClosestDistance = math.huge
+    local PlayersInfront = {}
 
     for _, VictimPlayer in Players:GetPlayers() do
         local VictimCharacter = VictimPlayer.Character
@@ -103,9 +102,8 @@ Magnet.AttackFunction = function(Player : Player)
         if not IsPlayerInfront(VictimCharacter, Character) then continue end
 
         local Distance = (Character:GetPivot().Position - VictimCharacter:GetPivot().Position).Magnitude
-        if Distance < 100 and Distance < ClosestDistance then
-            PlayerClosestInfront = VictimCharacter
-            ClosestDistance = Distance
+        if Distance < 100 then
+            table.insert(PlayersInfront, VictimCharacter)
         end
     end
 
@@ -119,9 +117,8 @@ Magnet.AttackFunction = function(Player : Player)
             if not IsPlayerInfront(Dummy, Character) then continue end
 
             local Distance = (Character:GetPivot().Position - Dummy:GetPivot().Position).Magnitude
-            if Distance < 100 and Distance < ClosestDistance then
-                PlayerClosestInfront = Dummy
-                ClosestDistance = Distance
+            if Distance < 100 then
+                table.insert(PlayersInfront, Dummy)
             end
         end
     end
@@ -134,17 +131,20 @@ Magnet.AttackFunction = function(Player : Player)
 
     task.wait(1)
 
+    print(PlayersInfront)
+
     Debris:AddItem(Bassdrop, Bassdrop.TimeLength + .1)
-    CombatServiceServer.Stun(PlayerClosestInfront, 2)
+    for _, Target in PlayersInfront do
+        task.spawn(function()
+            local Blocking = Target:FindFirstChild("Blocking")
 
-    if PlayerClosestInfront then
-        local Blocking = PlayerClosestInfront:FindFirstChild("Blocking")
-
-        if not Blocking then
-            MoveCharacter(PlayerClosestInfront, Character:GetPivot() + Character:GetPivot().LookVector * 6, .5)
-        else
-            Blocking:Destroy()
-        end
+            if not Blocking then
+                CombatServiceServer.Stun(Target, 2)
+                MoveCharacter(Target, Character:GetPivot() + Character:GetPivot().LookVector * 6, .5)
+            else
+                Blocking:Destroy()
+            end
+        end)
     end
 
     task.delay(10, function()

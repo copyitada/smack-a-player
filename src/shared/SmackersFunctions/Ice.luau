@@ -100,10 +100,7 @@ Ice.AttackFunction = function(Player : Player)
 
         VictimCharacter.RagdollTrigger.Value = true
 
-        if HumanoidDebounce[VictimHumanoid] then
-            warn("------------ " .. VictimCharacter.Name .. " already hit! ---------------")
-            return
-        end
+        if HumanoidDebounce[VictimHumanoid] then return end
 
         print("player touchable")
         

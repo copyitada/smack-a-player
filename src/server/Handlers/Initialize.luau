@@ -40,12 +40,19 @@ local function PlayerAdded(Player : Player)
         Attacker.Value = ""
 
         if not RunService:IsStudio() and Player.Team.Name == "Lobby" then return end
-        local SmackerInstance = ServerStorage.Smackers:FindFirstChild(SmackerName.Value) or ServerStorage.Smackers.Default
+        local SmackerInstance = ServerStorage.Smackers:FindFirstChild(SmackerName.Value)
 
-        local SmackerTool = SmackerInstance:Clone()
-        SmackerTool.Parent = Character
+        local Humanoid : Humanoid = Character:WaitForChild("Humanoid")
 
-        local Humanoid : Humanoid = Character:FindFirstChild("Humanoid")
+        local SmackerTool
+        if SmackerInstance then
+            SmackerTool = SmackerInstance:Clone()
+            SmackerTool.Parent = Character
+
+            if Humanoid then
+                Humanoid:EquipTool(SmackerTool)
+            end
+        end
 
         if Humanoid then
             Humanoid.Died:Connect(function()
@@ -85,13 +92,19 @@ local function PlayerAdded(Player : Player)
                     AttackerKills.Value += 1
                 end
             end)
-
-            Character.Humanoid:EquipTool(SmackerTool)
-
-            task.wait(1)
-            if SmackerTool.Name == "Whip" then
+            
+            if SmackerTool and SmackerTool.Name == "Whip" then
                 for _, Segment in SmackerTool.Segment:GetChildren() do
                     Segment.CFrame = Character:GetPivot()
+
+                    Segment.Massless = true
+                    Segment.CustomPhysicalProperties = PhysicalProperties.new(
+                        .5,
+                        .8,
+                        .1,
+                        0,
+                        0
+                    )
                 end
                 for _, RopeConstraint in SmackerTool:GetDescendants() do
                     if not RopeConstraint:IsA("RopeConstraint") then continue end
@@ -135,7 +148,7 @@ function DistributeTool:SpecialAttack(Player)
     if ToolDebounces[Humanoid] then return end
 
     local SmackerName = Player:FindFirstChild("Values"):FindFirstChild("SmackerName")
-    if not ReplicatedStorage.Shared.SmackersFunctions[SmackerName.Value] then return end 
+    if not ReplicatedStorage.Shared.SmackersFunctions:FindFirstChild(SmackerName.Value) then return end 
 
     local Result = require(ReplicatedStorage.Shared.SmackersFunctions[SmackerName.Value]).AttackFunction(Player)
     return Result

@@ -183,8 +183,29 @@ function ShopServiceClient.DisplayButton(Player : Player, MainFrame : Frame, Sma
     Button.Parent = Master
     Button.Name = SmackerName
 
+    local CaptionText = Button:FindFirstChild("Caption")
+    local CaptionText2 = Button:FindFirstChild("Caption2")
+
+    local UIStroke = Button:FindFirstChild("UIStroke")
+
     local SmackerNameText = Button:FindFirstChild("SmackerName")
     SmackerNameText.Text = SmackerName
+
+    local SmackerInformation = ToolServiceUtils.GetInformation(nil, SmackerName)
+    local Caption = SmackerInformation.Shop.Information.Caption
+    if Caption then
+        CaptionText.Visible = true
+        CaptionText2.Visible = true
+
+        CaptionText.Text = Caption.Text
+        CaptionText2.Text = Caption.Text
+
+        SmackerNameText.TextColor3 = Caption.Color
+        SmackerNameText.TextColor3 = Caption.Color
+
+        UIStroke.Color = Caption.Color
+        Button.TextColor3 = Caption.Color
+    end
 
     ShopServiceClient.HoverLeave(Button)
 

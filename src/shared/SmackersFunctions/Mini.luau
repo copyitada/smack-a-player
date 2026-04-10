@@ -92,10 +92,7 @@ Default.AttackFunction = function(Player : Player)
 
         local VictimPlayer = Players:GetPlayerFromCharacter(VictimCharacter)
 
-        if HumanoidDebounce[VictimHumanoid] then
-            warn("------------ " .. VictimCharacter.Name .. " already hit! ---------------")
-            return
-        end
+        if HumanoidDebounce[VictimHumanoid] then return end
         
         HumanoidDebounce[VictimHumanoid] = true
         ReplicatedStorage.Remotes.ShakeOnce:FireClient(Player, 10, 20, .4, 1.1)

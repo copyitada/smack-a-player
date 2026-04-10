@@ -31,7 +31,7 @@ end
 
 Stealth.AttackFunction = function(Player : Player)
     local Character = Player.Character
-    local Humanoid = Character:FindFirstChild("Humanoid")
+    local Humanoid : Humanoid = Character:FindFirstChild("Humanoid")
     if not Humanoid then return false end
 
     local Animation = Instance.new("Animation")
@@ -53,6 +53,8 @@ Stealth.AttackFunction = function(Player : Player)
     RootPartAction(Character.PrimaryPart)
 
     local TransparencyLists = {}
+
+    Humanoid.DisplayDistanceType = Enum.HumanoidDisplayDistanceType.None
 
     for _, BasePart in Character:GetChildren() do
         if BasePart:IsA("Accessory") then
@@ -76,6 +78,8 @@ Stealth.AttackFunction = function(Player : Player)
         for _, BasePart in TransparencyLists do
             BasePart.key.Transparency = BasePart.value
         end
+
+        Humanoid.DisplayDistanceType = Enum.HumanoidDisplayDistanceType.Viewer
     end)
 
     task.delay(15, function()

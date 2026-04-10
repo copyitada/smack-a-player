@@ -30,6 +30,9 @@ function ToolService.InitializeSmacker(Player : Player, Tool)
     SmackAnimation.Name = "SmackAnimation"
     SmackAnimation.Parent = Tool
     SmackAnimation.AnimationId = "rbxassetid://136511099213466"
+    if Tool.Name == "Whip" then
+        SmackAnimation.AnimationId = "rbxassetid://110904704122106"
+    end
 
     local AnimTrack = Animator:LoadAnimation(SmackAnimation)
 
@@ -72,9 +75,7 @@ function ToolService.InitializeSmacker(Player : Player, Tool)
 
                 local VictimPlayer = Players:GetPlayerFromCharacter(VictimCharacter)
 
-                if HumanoidDebounce[VictimHumanoid] then warn("------------ " .. VictimCharacter.Name .. " already hit! ---------------")
-                    return
-                end
+                if HumanoidDebounce[VictimHumanoid] then return end
                 HumanoidDebounce[VictimHumanoid] = true
 
                 local Blocking = VictimCharacter:FindFirstChild("Blocking")
@@ -84,6 +85,10 @@ function ToolService.InitializeSmacker(Player : Player, Tool)
 
                     TouchConnection:Disconnect()
                     return
+                end
+
+                if SmackerInformation.Smack.Hit then
+                    SmackerInformation.Smack.Hit(Player, VictimCharacter)
                 end
                 
                 ReplicatedStorage.Remotes.ShakeOnce:FireClient(Player, 5, 10, .1, .4)
@@ -104,19 +109,17 @@ function ToolService.InitializeSmacker(Player : Player, Tool)
                     PlayerValues.Attacker.Value = Player.Name
                 end
 
-                local Pivot : CFrame = Character:FindFirstChild("HumanoidRootPart").CFrame
-
                 local KnockbackSpeed = SmackerInformation.Smack.KnockbackSpeed
                 local KnockbackUp = SmackerInformation.Smack.KnockbackUp
                 
                 if typeof(KnockbackSpeed) == "function" then
-                    KnockbackSpeed = SmackerInformation.Smack.KnockbackSpeed()
+                    KnockbackSpeed = require(ReplicatedStorage.Shared.Services.ToolService.ToolServiceUtils).GetInformation(Player).Smack.KnockbackSpeed()
                 end
                 if typeof(KnockbackUp) == "function" then
-                    KnockbackUp = SmackerInformation.Smack.KnockbackUp()
+                    KnockbackUp = require(ReplicatedStorage.Shared.Services.ToolService.ToolServiceUtils).GetInformation(Player).Smack.KnockbackUp()
                 end
 
-                KnockbackServiceServer.Apply(VictimCharacter:FindFirstChild("HumanoidRootPart"), Pivot, KnockbackSpeed, KnockbackUp)
+                KnockbackServiceServer.Apply(VictimCharacter:FindFirstChild("HumanoidRootPart"), Character, KnockbackSpeed, KnockbackUp)
 
                 task.delay(1.5, function()
                     VictimCharacter.RagdollTrigger.Value = false
@@ -136,9 +139,8 @@ function ToolService.InitializeSmacker(Player : Player, Tool)
 
                     local VictimPlayer = Players:GetPlayerFromCharacter(VictimCharacter)
 
-                    if HumanoidDebounce[VictimHumanoid] then warn("------------ " .. VictimCharacter.Name .. " already hit! ---------------")
-                        return
-                    end
+                    if HumanoidDebounce[VictimHumanoid] then return end
+                    
                     HumanoidDebounce[VictimHumanoid] = true
 
                     local Blocking = VictimCharacter:FindFirstChild("Blocking")
@@ -148,6 +150,10 @@ function ToolService.InitializeSmacker(Player : Player, Tool)
 
                         TouchConnection:Disconnect()
                         return
+                    end
+
+                    if SmackerInformation.Smack.Hit then
+                        SmackerInformation.Smack.Hit(Player, VictimCharacter)
                     end
                     
                     ReplicatedStorage.Remotes.ShakeOnce:FireClient(Player, 5, 10, .1, .4)
@@ -168,23 +174,45 @@ function ToolService.InitializeSmacker(Player : Player, Tool)
                         PlayerValues.Attacker.Value = Player.Name
                     end
 
-                    local Pivot : CFrame = Character:FindFirstChild("HumanoidRootPart").CFrame
-
                     local KnockbackSpeed = SmackerInformation.Smack.KnockbackSpeed
                     local KnockbackUp = SmackerInformation.Smack.KnockbackUp
                     
                     if typeof(KnockbackSpeed) == "function" then
-                        KnockbackSpeed = SmackerInformation.Smack.KnockbackSpeed()
+                        KnockbackSpeed = require(ReplicatedStorage.Shared.Services.ToolService.ToolServiceUtils).GetInformation(Player).Smack.KnockbackSpeed()
                     end
                     if typeof(KnockbackUp) == "function" then
-                        KnockbackUp = SmackerInformation.Smack.KnockbackUp()
+                        KnockbackUp = require(ReplicatedStorage.Shared.Services.ToolService.ToolServiceUtils).GetInformation(Player).Smack.KnockbackUp()
                     end
 
-                    KnockbackServiceServer.Apply(VictimCharacter:FindFirstChild("HumanoidRootPart"), Pivot, KnockbackSpeed, KnockbackUp)
+                    KnockbackServiceServer.Apply(VictimCharacter:FindFirstChild("HumanoidRootPart"), Character, KnockbackSpeed, KnockbackUp)
 
                     task.delay(1.5, function()
                         VictimCharacter.RagdollTrigger.Value = false
                     end)
+                end)
+            end
+        end
+
+        if Tool.Name == "Whip" then
+            for i, Segment in Tool.Segment:GetChildren() do
+                Segment.CanCollide = false
+                task.spawn(function()
+                    task.wait(i * .03)
+
+                    local Attachment = Instance.new("Attachment")
+                    Attachment.Parent = Segment
+
+                    local Velocity = Instance.new("LinearVelocity")
+                    Velocity.Attachment0 = Attachment
+                    Velocity.VectorVelocity = Tool.Handle.CFrame.LookVector * (80/i)
+                    Velocity.MaxForce = 50000
+                    Velocity.Parent = Segment
+
+                    task.wait(.15)
+                    Velocity:Destroy()
+                    Attachment:Destroy()
+
+                    Segment.CanCollide = true
                 end)
             end
         end

@@ -1,4 +1,108 @@
+local Players = game:GetService("Players")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+--[[
+TEMPLATE:
+{
+        SmackerName = "SMACKER_NAME",
+        Shop = {
+            Price = 0,
+            Information = {
+                Description = "SMACKER_DESCRIPTION",
+                Ability = {
+                    Title = "ABILITY_TITLE",
+                    Description = "ABILITY_DESCRIPTION"
+                },
+                Damage = "7", -- make these the same as the SMACK stats below
+                KnockbackSpeed = "30",
+                KnockbackUp = "15",
+            }
+        },
+        Smack = {
+            Damage = 7,
+            KnockbackSpeed = 30,
+            KnockbackUp = 15,
+            KnockbackVulnerability = 1 -- (optional*)
+            AnimationSpeed = 1,
+        },
+        Attack = {
+            AttackName = "Smash",
+            AttackDuration = 2,
+            AttackDebounce = 10,
+        }
+    },
+]]
+
 return {
+    {
+        SmackerName = "Nothing",
+        Shop = {
+            Price = 0,
+            Information = {
+                Description = "\"april fools\"!!! it's there bro, look closer (source: trust me)",
+                Ability = {
+                    Title = "R U FOR REAL????",
+                    Description = "i won't dedicate 10 seconds of my life to write text for something nonexistent"
+                },
+                Damage = "do you expect damage from the absence of a smacker",
+                KnockbackSpeed = "insert knockbackspeed?",
+                KnockbackUp = "insert knockbackup???",
+                Caption = {
+                    Text = "LIMITED!!!",
+                    Color = Color3.fromRGB(255, 255, 0)
+                }
+            }
+        },
+        Smack = {
+            Damage = 7,
+            KnockbackSpeed = 30,
+            KnockbackUp = 15,
+            AnimationSpeed = 1,
+        },
+        Attack = {
+            AttackName = "Smash",
+            AttackDuration = 2,
+            AttackDebounce = 10,
+        }
+    },
+    {
+        SmackerName = "Tutorial",
+        Shop = {
+            Price = 0,
+            Information = {
+                Description = "april fools!!! free for new players to use!",
+                Ability = {
+                    Title = "free tutoring",
+                    Description = "you may lack brainpower to process how smacking should be properly executed, hence why this smacker was made."
+                },
+                Damage = "10",
+                KnockbackSpeed = "40",
+                KnockbackUp = "20",
+                Caption = {
+                    Text = "LIMITED!!!",
+                    Color = Color3.fromRGB(255, 255, 0)
+                }
+            }
+        },
+        Smack = {
+            Damage = 7,
+            KnockbackSpeed = 30,
+            KnockbackUp = 15,
+            AnimationSpeed = 1,
+            Hit = function(AttackerPlayer : Player, VictimCharacter)
+                local VictimPlayer = Players:GetPlayerFromCharacter(VictimCharacter)
+
+                ReplicatedStorage.Remotes.Distract:FireClient(AttackerPlayer)
+                if VictimPlayer then
+                    ReplicatedStorage.Remotes.Distract:FireClient(VictimPlayer)
+                end
+            end
+        },
+        Attack = {
+            AttackName = "Smash",
+            AttackDuration = 2,
+            AttackDebounce = 10,
+        }
+    },
     {
         SmackerName = "Default",
         Shop = {
@@ -85,7 +189,7 @@ return {
         Shop = {
             Price = 25,
             Information = {
-                Description = "Teeny-weeny-bitty smacker with less cooldown and faster animation.",
+                Description = "Teeny-weeny-bitty smacker with less cooldown and faster animation. Try if you like challenges (broken hitbox, small damage small knockback).",
                 Ability = {
                     Title = "Light Smash",
                     Description = "Mini smash, shorter windup paired with less damage."
@@ -115,7 +219,7 @@ return {
                 Description = "A hot smacker only the wielder can hold, since it's too hot.",
                 Ability = {
                     Title = "Too Hot",
-                    Description = "TOO HOT!!! Does a little magic trick and creates an area that burns players who touch it (except yourself)"
+                    Description = "TOO HOT!!! Does a little magic trick and creates an area that burns players who touch it (except yourself). Deals 32 damage total, 4 damage per second over the span of 8 seconds."
                 },
                 Damage = "7",
                 KnockbackSpeed = "30",
@@ -142,7 +246,7 @@ return {
                 Description = "Cold, still usable smacker. Kinda...",
                 Ability = {
                     Title = "Too Cold",
-                    Description = "TOO COLD!!! Does an uppercut, and anyone who touches the smacker will be frozen."
+                    Description = "TOO COLD!!! Does an uppercut, and anyone who touches the smacker will be frozen for 5 seconds."
                 },
                 Damage = "7",
                 KnockbackSpeed = "30",
@@ -276,6 +380,61 @@ return {
         }
     },
     {
+        SmackerName = "Cannonball",
+        Shop = {
+            Price = 0,
+            Information = {
+                Description = "A smacker, with a cannonball as a head. Be a real-time pirate.",
+                Ability = {
+                    Title = "Shoot",
+                    Description = "Shoot your lethal cannonball, once it hits a player, it explodes and deals 35 damage. Dodgable."
+                },
+                Damage = "7",
+                KnockbackSpeed = "30",
+                KnockbackUp = "15",
+            }
+        },
+        Smack = {
+            Damage = 7,
+            KnockbackSpeed = 30,
+            KnockbackUp = 15,
+            AnimationSpeed = 1,
+        },
+        Attack = {
+            AttackName = "Shoot",
+            AttackDuration = 1,
+            AttackDebounce = 10,
+        }
+    },
+    {
+        SmackerName = "Glass",
+        Shop = {
+            Price = 750,
+            Information = {
+                Description = "Glass smacker. High damage and insane knockback, but with a catch.",
+                Ability = {
+                    Title = "Vulnerable",
+                    Description = "[PASSIVE] You take 2x knockback from everything. High risk, high reward."
+                },
+                Damage = "12",
+                KnockbackSpeed = "50",
+                KnockbackUp = "35",
+            }
+        },
+        Smack = {
+            Damage = 12,
+            KnockbackSpeed = 55,
+            KnockbackUp = 35,
+            KnockbackVulnerability = 2,
+            AnimationSpeed = 1,
+        },
+        Attack = {
+            AttackName = "Vulnerable",
+            AttackDuration = 2,
+            AttackDebounce = 10,
+        },
+    },
+    {
         SmackerName = "Landmine",
         Shop = {
             Price = 1000,
@@ -332,12 +491,12 @@ return {
     {
         SmackerName = "Whip",
         Shop = {
-            Price = 1250,
+            Price = 1500,
             Information = {
                 Description = "A whip-shaped smacker, interesting concept along with landmine. Don't try to do your interesting ideas with the \"smacker\".",
                 Ability = {
                     Title = "Big Whip",
-                    Description = "Do a big whip."
+                    Description = "Do a big whip, deals 40 damage."
                 },
                 Damage = "7",
                 KnockbackSpeed = "30",
@@ -364,7 +523,7 @@ return {
                 Description = "A magnet smacker. The smacker's handle holding the magnet.",
                 Ability = {
                     Title = "Pull",
-                    Description = "Pull players infront of you within a 50-stud range."
+                    Description = "Pull players infront of you within a 100-stud range, targetted players are stunned for 2 seconds. Good for crowd control."
                 },
                 Damage = "7",
                 KnockbackSpeed = "30",
@@ -380,6 +539,33 @@ return {
         Attack = {
             AttackName = "Pull",
             AttackDuration = 1,
+            AttackDebounce = 10,
+        }
+    },
+    {
+        SmackerName = "Mirror",
+        Shop = {
+            Price = 3000,
+            Information = {
+                Description = "A handle handling a mirror. No realistic reflect effect to reflect.",
+                Ability = {
+                    Title = "Reflect",
+                    Description = "Turns your handle handling mirror into a mirror that reflects effects. You reflect knockback effects from attacking attackers for 2 seconds."
+                },
+                Damage = "7",
+                KnockbackSpeed = "30",
+                KnockbackUp = "15",
+            }
+        },
+        Smack = {
+            Damage = 7,
+            KnockbackSpeed = 30,
+            KnockbackUp = 15,
+            AnimationSpeed = 1,
+        },
+        Attack = {
+            AttackName = "Reflect",
+            AttackDuration = 2,
             AttackDebounce = 10,
         }
     },

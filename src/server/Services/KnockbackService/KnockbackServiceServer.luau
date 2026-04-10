@@ -6,25 +6,45 @@ local SmackSound = ServerStorage:FindFirstChild("snap.wav")
 local KnockbackService = {}
 
 local Debris = game:GetService("Debris")
-function KnockbackService.Apply(RootPart, RootPartCFrame : CFrame, KnockbackSpeed : number?, KnockbackUp: number?)
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local ToolServiceUtils = require(ReplicatedStorage.Shared.Services.ToolService.ToolServiceUtils)
+
+function KnockbackService.Apply(RootPart, AttackerCharacter : Model, KnockbackSpeed : number?, KnockbackUp: number?)
     local Humanoid = RootPart.Parent:FindFirstChild("Humanoid")
     assert(Humanoid, "Humanoid is nonexistent.")
+
+    local Tool = RootPart.Parent:FindFirstChildWhichIsA("Tool")
 
     local ConfirmedKnockbackSpeed = Humanoid.Health <= 7 and 999 or KnockbackSpeed or 15
     local ConfirmedKnockbackUp = Humanoid.Health <= 7 and 999 or KnockbackUp or 30
 
-    local KnockbackVelocity = RootPartCFrame.LookVector * ConfirmedKnockbackSpeed + Vector3.new(0, ConfirmedKnockbackUp, 0)
+    if Tool then
+        local SmackerInformation = ToolServiceUtils.GetInformation(nil, Tool.Name)
+
+        ConfirmedKnockbackSpeed *= SmackerInformation.Smack.KnockbackVulnerability or 1
+        ConfirmedKnockbackUp *= SmackerInformation.Smack.KnockbackVulnerability or 1
+    end
+
+    local KnockbackVelocity = AttackerCharacter:GetPivot().LookVector * ConfirmedKnockbackSpeed + Vector3.new(0, ConfirmedKnockbackUp, 0)
+
+    local Parent = RootPart
+    if RootPart.Parent:FindFirstChild("Mirror") then
+        Parent = AttackerCharacter:FindFirstChild("HumanoidRootPart")
+        KnockbackVelocity = -AttackerCharacter:GetPivot().LookVector * ConfirmedKnockbackSpeed + Vector3.new(0, ConfirmedKnockbackUp, 0)
+    end
+
+    assert(Parent, "Nonexistent")
 
     local LinearVelocity = Instance.new("LinearVelocity")
-    LinearVelocity.Parent     = RootPart
-    LinearVelocity.Attachment0 = RootPart:FindFirstChild("RootAttachment")
+    LinearVelocity.Parent     = Parent
+    LinearVelocity.Attachment0 = Parent:FindFirstChild("RootAttachment")
     LinearVelocity.RelativeTo  = Enum.ActuatorRelativeTo.World  -- world-space so LookVector maps directly
     LinearVelocity.MaxForce    = math.huge
     LinearVelocity.VectorVelocity = KnockbackVelocity
 
     local EffectClone : Attachment = PunchEffect:Clone()
-    EffectClone.Parent = RootPart
-    EffectClone.WorldCFrame = RootPart.CFrame
+    EffectClone.Parent = Parent
+    EffectClone.WorldCFrame = Parent.CFrame
 
     for _, Particle in EffectClone:GetChildren() do
         task.spawn(function()
@@ -33,7 +53,7 @@ function KnockbackService.Apply(RootPart, RootPartCFrame : CFrame, KnockbackSpee
     end
 
     local CloneSound : Sound = SmackSound:Clone()
-    CloneSound.Parent = RootPart
+    CloneSound.Parent = Parent
     CloneSound:Play()
 
     Debris:AddItem(CloneSound, 1)
