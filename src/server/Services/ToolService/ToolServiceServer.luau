@@ -1,5 +1,7 @@
+local Debris = game:GetService("Debris")
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local RunService = game:GetService("RunService")
 local ServerScriptService = game:GetService("ServerScriptService")
 local ServerStorage = game:GetService("ServerStorage")
 local ToolServiceUtils = require(ReplicatedStorage.Shared.Services.ToolService.ToolServiceUtils)
@@ -13,6 +15,62 @@ local SwingSound = ServerStorage:FindFirstChild("swing")
 local ToolDebounces = {}
 
 local ToolService = {}
+
+local function OnHit(Player, VictimCharacter, Hit, AnimTrack, Smacks)
+    local VictimHumanoid = Hit.Parent:FindFirstChild("Humanoid")
+    if not VictimHumanoid then return end
+
+    if VictimCharacter.Name == Player.Character.Name then return end
+
+    local VictimPlayer = Players:GetPlayerFromCharacter(VictimCharacter)
+
+    local SmackerInformation = ToolServiceUtils.GetInformation(Player)
+    local Blocking = VictimCharacter:FindFirstChild("Blocking")
+                
+    if Blocking then
+        CombatServiceServer.Parried(Player, Hit, AnimTrack)
+
+        return
+    end
+
+    if SmackerInformation.Smack.Hit then
+        SmackerInformation.Smack.Hit(Player, VictimCharacter)
+    end
+                
+    ReplicatedStorage.Remotes.ShakeOnce:FireClient(Player, 5, 10, .1, .4)
+
+    VictimCharacter.RagdollTrigger.Value = true
+
+    local Damage = SmackerInformation.Smack.Damage
+    if typeof(Damage) == "function" then
+        Damage = SmackerInformation.Smack.Damage()
+    end
+    VictimHumanoid:TakeDamage(Damage)
+
+    Smacks.Value += 1
+    DataManager.AddSmacks(Player)
+
+    if VictimPlayer then
+        local PlayerValues = ValueServiceServer.GetValues(VictimPlayer)
+        PlayerValues.Attacker.Value = Player.Name
+    end
+
+    local KnockbackSpeed = SmackerInformation.Smack.KnockbackSpeed
+    local KnockbackUp = SmackerInformation.Smack.KnockbackUp
+                
+    if typeof(KnockbackSpeed) == "function" then
+        KnockbackSpeed = require(ReplicatedStorage.Shared.Services.ToolService.ToolServiceUtils).GetInformation(Player).Smack.KnockbackSpeed()
+    end
+    if typeof(KnockbackUp) == "function" then
+        KnockbackUp = require(ReplicatedStorage.Shared.Services.ToolService.ToolServiceUtils).GetInformation(Player).Smack.KnockbackUp()
+    end
+
+    KnockbackServiceServer.Apply(VictimCharacter:FindFirstChild("HumanoidRootPart"), Player.Character, KnockbackSpeed, KnockbackUp)
+
+    task.delay(1.5, function()
+        VictimCharacter.RagdollTrigger.Value = false
+    end)
+end
 
 function ToolService.InitializeSmacker(Player : Player, Tool)
     local Character = Player.Character or Player.CharacterAdded:Wait()
@@ -36,8 +94,6 @@ function ToolService.InitializeSmacker(Player : Player, Tool)
 
     local AnimTrack = Animator:LoadAnimation(SmackAnimation)
 
-    local TouchConnection = {}
-
     Tool.Activated:Connect(function()
         if not ToolService.CheckEligibility(Player) then return end
 
@@ -51,7 +107,7 @@ function ToolService.InitializeSmacker(Player : Player, Tool)
             Tool.EvadeTaxes.CanCollide = false
             task.delay(.5, function()
                 Tool.EvadeTaxes.CanCollide = true
-            end)   
+            end)
         end
 
         local HumanoidDebounce = {}
@@ -65,133 +121,86 @@ function ToolService.InitializeSmacker(Player : Player, Tool)
         AnimTrack:GetMarkerReachedSignal("Hit"):Wait()
         AnimTrack:AdjustSpeed(Tool.Name == "Tank" and 2 or SmackerInformation.Smack.AnimationSpeed)
 
-        if PrimaryPart then
-            TouchConnection[PrimaryPart] = PrimaryPart.Touched:Connect(function(Hit)
-                local VictimHumanoid = Hit.Parent:FindFirstChild("Humanoid")
-                if not VictimHumanoid then return end
+        local PreviousCFrames = {}
 
-                local VictimCharacter = VictimHumanoid.Parent
-                if VictimCharacter.Name == Character.Name then return end
+        local function DoHitScan()
+            local Parts = {}
 
-                local VictimPlayer = Players:GetPlayerFromCharacter(VictimCharacter)
-
-                if HumanoidDebounce[VictimHumanoid] then return end
-                HumanoidDebounce[VictimHumanoid] = true
-
-                local Blocking = VictimCharacter:FindFirstChild("Blocking")
-                
-                if Blocking then
-                    CombatServiceServer.Parried(Player, Hit, AnimTrack)
-
-                    TouchConnection:Disconnect()
-                    return
+            if PrimaryPart then
+                table.insert(Parts, PrimaryPart)
+            else
+                for _, Object in Tool:GetDescendants() do
+                    if Object.Name == "Handle" then continue end
+                    if not Object:IsA("BasePart") then continue end
+                    table.insert(Parts, Object)
                 end
+            end
 
-                if SmackerInformation.Smack.Hit then
-                    SmackerInformation.Smack.Hit(Player, VictimCharacter)
-                end
-                
-                ReplicatedStorage.Remotes.ShakeOnce:FireClient(Player, 5, 10, .1, .4)
+            for _, Part in Parts do
+                local Hitbox = Instance.new("Part")
+                Hitbox.Color = Color3.fromRGB(255, 0, 0)
+                Hitbox.CanCollide = false
+                Hitbox.Anchored = true
+                Hitbox.Material = Enum.Material.ForceField
+                Hitbox.Transparency = RunService:IsStudio() and .5 or 1
+                Hitbox.CFrame = Part.CFrame
+                Hitbox.Size = Part.Size + Vector3.new(1.5, 1.5, 1.5)
+                Hitbox.Parent = workspace
 
-                VictimCharacter.RagdollTrigger.Value = true
+                Debris:AddItem(Hitbox, 1)
 
-                local Damage = SmackerInformation.Smack.Damage
-                if typeof(Damage) == "function" then
-                    Damage = SmackerInformation.Smack.Damage()
-                end
-                VictimHumanoid:TakeDamage(Damage)
+                local CurrentCFrame = Part.CFrame
+                local PreviousCFrame = PreviousCFrames[Part]
 
-                Smacks.Value += 1
-                DataManager.AddSmacks(Player)
-
-                if VictimPlayer then
-                    local PlayerValues = ValueServiceServer.GetValues(VictimPlayer)
-                    PlayerValues.Attacker.Value = Player.Name
-                end
-
-                local KnockbackSpeed = SmackerInformation.Smack.KnockbackSpeed
-                local KnockbackUp = SmackerInformation.Smack.KnockbackUp
-                
-                if typeof(KnockbackSpeed) == "function" then
-                    KnockbackSpeed = require(ReplicatedStorage.Shared.Services.ToolService.ToolServiceUtils).GetInformation(Player).Smack.KnockbackSpeed()
-                end
-                if typeof(KnockbackUp) == "function" then
-                    KnockbackUp = require(ReplicatedStorage.Shared.Services.ToolService.ToolServiceUtils).GetInformation(Player).Smack.KnockbackUp()
-                end
-
-                KnockbackServiceServer.Apply(VictimCharacter:FindFirstChild("HumanoidRootPart"), Character, KnockbackSpeed, KnockbackUp)
-
-                task.delay(1.5, function()
-                    VictimCharacter.RagdollTrigger.Value = false
-                end)
-            end)
-        else
-            for _, Object in Tool:GetDescendants() do
-                if Object.Name == "Handle" then continue end
-                if not Object:IsA("BasePart") then continue end
-
-                TouchConnection[Object] = Object.Touched:Connect(function(Hit)
-                    local VictimHumanoid = Hit.Parent:FindFirstChild("Humanoid")
-                    if not VictimHumanoid then return end
-
-                    local VictimCharacter = VictimHumanoid.Parent
-                    if VictimCharacter.Name == Character.Name then return end
-
-                    local VictimPlayer = Players:GetPlayerFromCharacter(VictimCharacter)
-
-                    if HumanoidDebounce[VictimHumanoid] then return end
+                if PreviousCFrame then
+                    local RaycastParams = RaycastParams.new()
+                    RaycastParams.FilterDescendantsInstances = {Tool, Character}
+                    RaycastParams.FilterType = Enum.RaycastFilterType.Exclude
                     
-                    HumanoidDebounce[VictimHumanoid] = true
+                    local Direction = (CurrentCFrame.Position - PreviousCFrame.Position)
 
-                    local Blocking = VictimCharacter:FindFirstChild("Blocking")
-                    
-                    if Blocking then
-                        CombatServiceServer.Parried(Player, Hit, AnimTrack)
+                    if Direction.Magnitude > .01 then
+                        local Result = workspace:Shapecast(Part, Direction, RaycastParams)
 
-                        TouchConnection:Disconnect()
-                        return
-                    end
+                        if Result then
+                            local HitCharacter = Result.Instance.Parent
+                            local VictimHumanoid = HitCharacter:FindFirstChild("Humanoid")
 
-                    if SmackerInformation.Smack.Hit then
-                        SmackerInformation.Smack.Hit(Player, VictimCharacter)
+                            if VictimHumanoid and HitCharacter ~= Character and not HumanoidDebounce[VictimHumanoid] then
+                                Hitbox.Color = Color3.fromRGB(0,255,0)
+
+                                HumanoidDebounce[VictimHumanoid] = true
+                                OnHit(Player, HitCharacter, Result.Instance, AnimTrack, Smacks)
+                            end
+                        end
                     end
                     
-                    ReplicatedStorage.Remotes.ShakeOnce:FireClient(Player, 5, 10, .1, .4)
 
-                    VictimCharacter.RagdollTrigger.Value = true
+                    -- local Hits = workspace:GetPartsInPart(Part, RaycastParams)
 
-                    local Damage = SmackerInformation.Smack.Damage
-                    if typeof(Damage) == "function" then
-                        Damage = SmackerInformation.Smack.Damage()
+                    --[[
+                    for _, Hit in Hits do
+                        local VictimHumanoid = Hit.Parent:FindFirstChild("Humanoid")
+                        if not VictimHumanoid then return end
+
+                        local VictimCharacter = VictimHumanoid.Parent
+                        if VictimCharacter.Name == Character.Name then return end
+
+                        if HumanoidDebounce[VictimHumanoid] then return end
+                        HumanoidDebounce[VictimHumanoid] = true
+
+                        OnHit(Player, VictimCharacter, Hit, AnimTrack, Smacks)
                     end
-                    VictimHumanoid:TakeDamage(Damage)
+                    ]]
+                end
 
-                    Smacks.Value += 1
-                    DataManager.AddSmacks(Player)
-
-                    if VictimPlayer then
-                        local PlayerValues = ValueServiceServer.GetValues(VictimPlayer)
-                        PlayerValues.Attacker.Value = Player.Name
-                    end
-
-                    local KnockbackSpeed = SmackerInformation.Smack.KnockbackSpeed
-                    local KnockbackUp = SmackerInformation.Smack.KnockbackUp
-                    
-                    if typeof(KnockbackSpeed) == "function" then
-                        KnockbackSpeed = require(ReplicatedStorage.Shared.Services.ToolService.ToolServiceUtils).GetInformation(Player).Smack.KnockbackSpeed()
-                    end
-                    if typeof(KnockbackUp) == "function" then
-                        KnockbackUp = require(ReplicatedStorage.Shared.Services.ToolService.ToolServiceUtils).GetInformation(Player).Smack.KnockbackUp()
-                    end
-
-                    KnockbackServiceServer.Apply(VictimCharacter:FindFirstChild("HumanoidRootPart"), Character, KnockbackSpeed, KnockbackUp)
-
-                    task.delay(1.5, function()
-                        VictimCharacter.RagdollTrigger.Value = false
-                    end)
-                end)
+                PreviousCFrames[Part] = CurrentCFrame
             end
         end
+
+        local Heartbeat = RunService.Heartbeat:Connect(function()
+            DoHitScan()
+        end)
 
         if Tool.Name == "Whip" then
             for i, Segment in Tool.Segment:GetChildren() do
@@ -221,15 +230,8 @@ function ToolService.InitializeSmacker(Player : Player, Tool)
         SwingCloneSound.Parent = Character:FindFirstChild("HumanoidRootPart")
         SwingCloneSound:Play()
 
-        if Tool.Name ~= "Mini" then
-            AnimTrack.Ended:Wait()
-        else
-            AnimTrack.Stopped:Wait()
-        end
-
-        for _, Connection in TouchConnection do 
-            Connection:Disconnect()
-        end
+        AnimTrack.Ended:Wait()
+        Heartbeat:Disconnect()
 
         for _, Trail in Tool:GetDescendants() do
             if Trail:IsA("Trail") then

@@ -6,14 +6,16 @@ local ServerStorage = game:GetService("ServerStorage")
 local KnockbackServiceServer = require(ServerScriptService.Server.Services.KnockbackService.KnockbackServiceServer)
 local ValueServiceServer = require(ServerScriptService.Server.Services.ValueService.ValueServiceServer)
 
+local Cannon = ServerStorage:FindFirstChild("Cannonball")
+
 -- script update
 
-local Default = {}
+local Cannonball = {}
 local SwingSound = ServerStorage:FindFirstChild("swing")
 
 local SpecialAttackDebounces = {}
 
-Default.AttackFunction = function(Player : Player)
+Cannonball.AttackFunction = function(Player : Player)
     local Character = Player.Character
     local Humanoid = Character:FindFirstChild("Humanoid")
     if not Humanoid then return false end
@@ -22,17 +24,10 @@ Default.AttackFunction = function(Player : Player)
     Animation.Name = "SpecialAttack"
     Animation.AnimationId = "rbxassetid://83138996215724"
 
-    local AnimTrack : AnimationTrack  = Humanoid.Animator:LoadAnimation(Animation)
-    local Tool = Player.Backpack:FindFirstChild("Default") or Character:FindFirstChild("Default")
+    local Tool = Player.Backpack:FindFirstChild("Cannonball") or Character:FindFirstChild("Cannonball")
 
     local TouchConnection
     local PrimaryPart = Tool:FindFirstChild("EvadeTaxes")
-
-    for _, Trail in PrimaryPart:GetChildren() do
-        if Trail:IsA("Trail") then
-            Trail.Transparency = NumberSequence.new(.7, .7)
-        end
-    end
 
     local HumanoidDebounce = {}
     if SpecialAttackDebounces[Humanoid] then return false end
@@ -46,10 +41,23 @@ Default.AttackFunction = function(Player : Player)
     SwingCloneSound.Parent = Character:FindFirstChild("HumanoidRootPart")
     SwingCloneSound:Play()
 
-    AnimTrack:Play()
-    AnimTrack:GetMarkerReachedSignal("Hit"):Wait()
+    local Clone = Cannon:Clone()
+    Clone.CFrame = PrimaryPart.CFrame
+    Clone.Parent = workspace
 
-    TouchConnection = PrimaryPart.Touched:Connect(function(Hit)
+    PrimaryPart.Transparency = 1
+    PrimaryPart.CanCollide = false
+
+    local LinearVelocity = Instance.new("LinearVelocity")
+    LinearVelocity.VectorVelocity = Character:GetPivot().LookVector * 100 + Vector3.new(0, 5, 0)
+    LinearVelocity.MaxForce = math.huge
+    LinearVelocity.RelativeTo = Enum.ActuatorRelativeTo.World
+    LinearVelocity.Attachment0 = Clone.Attachment
+    LinearVelocity.Parent = Clone
+
+    Debris:AddItem(LinearVelocity, .15)
+
+    TouchConnection = Clone.Touched:Connect(function(Hit)
         local VictimHumanoid = Hit.Parent:FindFirstChild("Humanoid")
         if not VictimHumanoid then return end
         local VictimCharacter = VictimHumanoid.Parent
@@ -64,31 +72,46 @@ Default.AttackFunction = function(Player : Player)
         HumanoidDebounce[VictimHumanoid] = true
         ReplicatedStorage.Remotes.ShakeOnce:FireClient(Player, 10, 20, .4, 1.1)
 
-        local Params = RaycastParams.new()
-        Params.FilterDescendantsInstances = {VictimCharacter}
-        Params.FilterType = Enum.RaycastFilterType.Exclude
+        local Explosion = Instance.new("Explosion")
+        Explosion.Parent = workspace
+        Explosion.BlastRadius = 0
+        Explosion.BlastPressure = 0
+        Explosion.Position = Clone.Position
 
-        local Results = workspace:Raycast(VictimCharacter:GetPivot().Position + Vector3.new(0, 10, 0), Vector3.new(0, -999999, 0), Params)
+        local Radius = Instance.new("Part")
+        Radius.Shape = Enum.PartType.Ball
+        Radius.Position = Clone.Position
+        Radius.Size = Vector3.new(20, 20, 20)
+        Radius.CanCollide = false
+        Radius.Transparency = 1
+        Radius.BrickColor = BrickColor.Red()
+        Radius.Anchored = true
+        Radius.Parent = workspace
 
-        for _ = 1, 50 do
-            local Debree : BasePart = Instance.new("Part")
-            Debree.Size = Vector3.new(.7, .7, .7)
-            Debree.Rotation = Vector3.new(math.random(-180, 180), math.random(-180, 180), math.random(-180, 180))
-            Debree.Anchored = false
-            Debree.Position = VictimCharacter:GetPivot().Position + Vector3.new(math.random(-2, 2), 10, math.random(-2, 2))
-            Debree.Parent = workspace.VFX.Debris
+        local Parts = workspace:GetPartsInPart(Radius)
 
-            if Results then
-                Debree.Material = Results.Material
-                Debree.Color = Results.Instance.Color
-            else
-                Debree.Material = Enum.Material.Neon
-                Debree.Color = Color3.fromRGB(255,255,255)
-            end
+        for _, Part in pairs(Parts) do
+            pcall(function()
+                local RadiusHumanoid = Part.Parent:FindFirstChild("Humanoid")
+                if not RadiusHumanoid then return end
 
-            Debree:ApplyImpulse(Vector3.new(math.random(-5, 5), 20, math.random(-5, 5)))
-            Debris:AddItem(Debree, 10)
+                if HumanoidDebounce[RadiusHumanoid] then return end
+                HumanoidDebounce[RadiusHumanoid] = true
+
+                RadiusHumanoid:TakeDamage(10)
+                RadiusHumanoid.Parent.RagdollTrigger.Value = true
+                RadiusHumanoid.Parent.PrimaryPart:ApplyImpulse((Clone.Position - Character:GetPivot().Position).Unit * Part.Parent.PrimaryPart.AssemblyMass * 50)
+
+
+                task.delay(2.5, function()
+                    RadiusHumanoid.Parent.RagdollTrigger.Value = false
+                end)
+            end)
         end
+
+        Debris:AddItem(Radius, .5)
+
+        Clone:Destroy()
 
         VictimHumanoid:TakeDamage(35)
 
@@ -102,26 +125,16 @@ Default.AttackFunction = function(Player : Player)
         task.delay(2.5, function()
             VictimCharacter.RagdollTrigger.Value = false
         end)
+
+        TouchConnection:Disconnect()
     end)
 
-    AnimTrack.Ended:Wait()
-
-    TouchConnection:Disconnect()
-    for _, Trail in PrimaryPart:GetChildren() do
-        if Trail:IsA("Trail") then
-            Trail.Lifetime = .1
-        end
-    end
-
-    task.wait(.1)
-    for _, Trail in PrimaryPart:GetChildren() do
-        if Trail:IsA("Trail") then
-            Trail.Transparency = NumberSequence.new(1, 1)
-        end
-    end
+    task.wait(1)
+    PrimaryPart.Transparency = 0
+    PrimaryPart.CanCollide = true
     
     task.wait()
     return true
 end
 
-return Default
+return Cannonball

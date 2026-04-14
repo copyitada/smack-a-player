@@ -51,6 +51,7 @@ local CooldownBarRaw = ReplicatedStorage:FindFirstChild("CooldownBar")
 local MoneyUI = PlayerUI.ToolUI.SidePanel.Money
 
 local IsDead = false
+local AbilityDebounce = false
 
 local Networker = require(ReplicatedStorage.Packages.Networker)
 local SpecialAttackDebounce = false
@@ -61,9 +62,13 @@ local function GetSmackerInfo() : Smacker
 end
 
 local function SpecialAttack()
+    if AbilityDebounce then return end
+
     local SmackerInformation = GetSmackerInfo()
     local Results = Networker.client.new("ToolInputs", InputController):fetch("SpecialAttack")
     if Results then
+        AbilityDebounce = true
+
         local CooldownBar = CooldownBarRaw:Clone()
         CooldownBar.Parent = CooldownList
 
@@ -80,6 +85,8 @@ local function SpecialAttack()
             end
 
             CooldownBar:Destroy()
+
+            AbilityDebounce = false
             Networker.client.new("ToolInputs", InputController):fire("Sparkle", Color3.fromRGB(255, 0, 0))
         end)
 

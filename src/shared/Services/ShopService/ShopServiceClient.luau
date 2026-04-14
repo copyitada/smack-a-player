@@ -200,6 +200,9 @@ function ShopServiceClient.DisplayButton(Player : Player, MainFrame : Frame, Sma
         CaptionText.Text = Caption.Text
         CaptionText2.Text = Caption.Text
 
+        CaptionText.TextColor3 = Caption.Color
+        CaptionText2.TextColor3 = Caption.Color
+
         SmackerNameText.TextColor3 = Caption.Color
         SmackerNameText.TextColor3 = Caption.Color
 

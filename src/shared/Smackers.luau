@@ -382,7 +382,7 @@ return {
     {
         SmackerName = "Cannonball",
         Shop = {
-            Price = 0,
+            Price = 600,
             Information = {
                 Description = "A smacker, with a cannonball as a head. Be a real-time pirate.",
                 Ability = {
@@ -540,6 +540,37 @@ return {
             AttackName = "Pull",
             AttackDuration = 1,
             AttackDebounce = 10,
+        }
+    },
+    {
+        SmackerName = "Build",
+        Shop = {
+            Price = 2500,
+            Information = {
+                Description = "Johnny is building a nice platform, I wonder what's gonna happen to Johnny.",
+                Ability = {
+                    Title = "Construct",
+                    Description = "Make a circle-shaped platform that lasts for 10 seconds, tower up to the lobby yo!"
+                },
+                Damage = "7",
+                KnockbackSpeed = "30",
+                KnockbackUp = "15",
+                Caption = {
+                    Text = "NEW!!!",
+                    Color = Color3.fromRGB(0, 247, 255)
+                }
+            }
+        },
+        Smack = {
+            Damage = 7,
+            KnockbackSpeed = 30,
+            KnockbackUp = 15,
+            AnimationSpeed = 1,
+        },
+        Attack = {
+            AttackName = "Construct",
+            AttackDuration = 1,
+            AttackDebounce = 5,
         }
     },
     {

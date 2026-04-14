@@ -53,6 +53,29 @@ local function IsPlayerInfront(VictimCharacter, ThrowingCharacter)
     return ThrowingCharacter:GetPivot().LookVector:Dot(Direction) > 0.45
 end
 
+local function OnHit(Player, Humanoid, Hit, ThrownCFrame)
+    local VictimCharacter = Hit:FindFirstAncestorOfClass("Model")
+    if VictimCharacter then
+        local VictimHumanoid = VictimCharacter:FindFirstChild("Humanoid")
+        if VictimHumanoid and VictimHumanoid ~= Humanoid then
+            local VictimPlayer = Players:GetPlayerFromCharacter(VictimCharacter)
+            VictimCharacter.RagdollTrigger.Value = true
+
+            RootPartAction(VictimCharacter:FindFirstChild("HumanoidRootPart"), ThrownCFrame, Vector3.new(0, 0, 60))
+            VictimHumanoid:TakeDamage(20)
+
+            if VictimPlayer then
+                local PlayerValues = ValueServiceServer.GetValues(VictimPlayer)
+                PlayerValues.Attacker.Value = Player.Name
+            end
+
+            task.delay(2.5, function()
+                VictimCharacter.RagdollTrigger.Value = false
+            end)
+        end
+    end
+end
+
 Javelin.AttackFunction = function(Player : Player)
     local Character = Player.Character
     local Humanoid = Character:FindFirstChild("Humanoid")
@@ -79,7 +102,8 @@ Javelin.AttackFunction = function(Player : Player)
         end
     end
 
-    local HumanoidDebounces = {}
+    local HumanoidDebounce = {}
+    local PreviousCFrames = {}
 
     if SpecialAttackDebounces[Humanoid] then return false end
     SpecialAttackDebounces[Humanoid] = true
@@ -167,44 +191,52 @@ Javelin.AttackFunction = function(Player : Player)
     local StartTime = tick()
     local ThrownCFrame = RootPart.CFrame
 
-    TouchConnection = Tip.Touched:Connect(function(Hit)
-        print(Hit:GetFullName())
-        if Hit:IsDescendantOf(Character) then return end
-        if Hit:IsDescendantOf(NewJavelin) then return end
-        if not Hit.CanCollide then return end
+    local function DoHitScan()
+        local Parts = {Tip}
 
-        local VictimCharacter = Hit:FindFirstAncestorOfClass("Model")
-        if VictimCharacter then
-            local VictimHumanoid = VictimCharacter:FindFirstChild("Humanoid")
-            if VictimHumanoid and VictimHumanoid ~= Humanoid and not HumanoidDebounces[Humanoid] then
-                local VictimPlayer = Players:GetPlayerFromCharacter(VictimCharacter)
+        for _, Part in Parts do
+            local Hitbox = Instance.new("Part")
+            Hitbox.Color = Color3.fromRGB(255, 0, 0)
+            Hitbox.CanCollide = false
+            Hitbox.Anchored = true
+            Hitbox.Material = Enum.Material.ForceField
+            Hitbox.Transparency = RunService:IsStudio() and .5 or 1
+            Hitbox.CFrame = Part.CFrame
+            Hitbox.Size = Part.Size + Vector3.new(1.5, 1.5, 1.5)
+            Hitbox.Parent = workspace
 
-                HumanoidDebounces[Humanoid] = true
-                VictimCharacter.RagdollTrigger.Value = true
+            Debris:AddItem(Hitbox, 1)
 
-                RootPartAction(VictimCharacter:FindFirstChild("HumanoidRootPart"), ThrownCFrame, Vector3.new(0, 0, 60))
-                VictimHumanoid:TakeDamage(20)
+            local CurrentCFrame = Part.CFrame
+            local PreviousCFrame = PreviousCFrames[Part]
 
-                if VictimPlayer then
-                    local PlayerValues = ValueServiceServer.GetValues(VictimPlayer)
-                    PlayerValues.Attacker.Value = Player.Name
-                end
-
-                task.delay(2, function()
-                    HumanoidDebounces[Humanoid] = nil
+            if PreviousCFrame then
+                local RaycastParams = RaycastParams.new()
+                RaycastParams.FilterDescendantsInstances = {Tool, Character}
+                RaycastParams.FilterType = Enum.RaycastFilterType.Exclude
                     
-                    task.wait(.5)
-                    VictimCharacter.RagdollTrigger.Value = false
-                end)
-            end
-        end
+                local Direction = (CurrentCFrame.Position - PreviousCFrame.Position)
 
-        task.delay(5, function()
-            if NewJavelin and NewJavelin.Parent then
-                NewJavelin:Destroy()
+                if Direction.Magnitude > .01 then
+                    local Result = workspace:Shapecast(Part, Direction, RaycastParams)
+
+                    if Result then
+                        local HitCharacter = Result.Instance.Parent
+                        local VictimHumanoid = HitCharacter:FindFirstChild("Humanoid")
+
+                        if VictimHumanoid and HitCharacter ~= Character and not HumanoidDebounce[VictimHumanoid] then
+                            Hitbox.Color = Color3.fromRGB(0,255,0)
+
+                            HumanoidDebounce[VictimHumanoid] = true
+                            OnHit(Player, Humanoid, Result.Instance, ThrownCFrame)
+                        end
+                    end
+                end
             end
-        end)
-    end)
+
+            PreviousCFrames[Part] = CurrentCFrame
+        end
+    end
 
     task.spawn(function()
         while Moving do
@@ -214,13 +246,13 @@ Javelin.AttackFunction = function(Player : Player)
             end
 
             RunService.Heartbeat:Wait()
+            DoHitScan()
 
             NewJavelin:PivotTo(NewJavelin:GetPivot() + NewJavelin:GetPivot().LookVector)
 
             local Elapsed = tick() - StartTime
             if Elapsed >= LIFETIME then
                 Moving = false
-                TouchConnection:Disconnect()
                 if NewJavelin and NewJavelin.Parent then
                     NewJavelin:Destroy()
                 end

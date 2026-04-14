@@ -14,7 +14,7 @@ local RoundServiceServer = require(ServerScriptService.Server.Services.RoundServ
 local ShopServiceServer = require(ServerScriptService.Server.Services.ShopService.ShopServiceServer)
 local ToolServiceServer = require(ServerScriptService.Server.Services.ToolService.ToolServiceServer)
 local ValueServiceServer = require(ServerScriptService.Server.Services.ValueService.ValueServiceServer)
-local DistributeTool = {}
+local Initialize = {}
 local Networker = require(ReplicatedStorage.Packages.Networker)
 local ShopServiceClient = require(ReplicatedStorage.Shared.Services.ShopService.ShopServiceClient)
 local ToolServiceUtils = require(ReplicatedStorage.Shared.Services.ToolService.ToolServiceUtils)
@@ -132,7 +132,7 @@ function OnServerEvent(Player : Player, Enable)
     Values.AFK.Value = Enable or not Values.AFK.Value
 end
 
-function DistributeTool:Block(Player : Player)
+function Initialize:Block(Player : Player)
     local Success, _Humanoid = ToolServiceServer.CheckEligibility(Player)
 
     if not Success then return end
@@ -141,7 +141,19 @@ function DistributeTool:Block(Player : Player)
     return CanBlock
 end
 
-function DistributeTool:SpecialAttack(Player)
+function Initialize:UpdatePosition(Player : Player, CFrame)
+    local Character = Player.Character or Player.CharacterAdded:Wait()
+    if not Character then return end
+
+    local HumanoidRootPart = Character:FindFirstChild("HumanoidRootPart")
+    if not HumanoidRootPart then return end
+
+    if (HumanoidRootPart.Position - CFrame.Posiiton).Magnitude > 10 then return end
+
+    
+end
+
+function Initialize:SpecialAttack(Player)
     local Success, Humanoid = ToolServiceServer.CheckEligibility(Player)
 
     if not Success then return end
@@ -154,15 +166,15 @@ function DistributeTool:SpecialAttack(Player)
     return Result
 end
 
-function DistributeTool:Information(Player)
+function Initialize:Information(Player)
     return ToolServiceUtils.GetInformation(Player)
 end
 
-function DistributeTool:Sparkle(Player : Player, Color : Color3)
+function Initialize:Sparkle(Player : Player, Color : Color3)
     EffectServiceServer.Sparkle(Player, Color)
 end
 
-function DistributeTool:DisplayItem(Player : Player, SmackerName)
+function Initialize:DisplayItem(Player : Player, SmackerName)
     local Tool : Tool = ServerStorage.Smackers:FindFirstChild(SmackerName)
     if not Tool then return end
 
@@ -175,32 +187,32 @@ function DistributeTool:DisplayItem(Player : Player, SmackerName)
     ShopServiceClient.DisplayItem(ViewportFrame, Tool)
 end
 
-function DistributeTool:UnlockSmacker(Player : Player, SmackerName)
+function Initialize:UnlockSmacker(Player : Player, SmackerName)
     return ShopServiceServer.UnlockSmacker(Player, SmackerName)
 end
 
-function DistributeTool:HasUnlockedSmacker(Player : Player, SmackerName)
+function Initialize:HasUnlockedSmacker(Player : Player, SmackerName)
     return ShopServiceServer.HasUnlockedSmacker(Player, SmackerName)
 end
 
-function DistributeTool.Init()
+function Initialize.Init()
     ReplicatedStorage.Remotes.ChangeSmacker.OnServerInvoke = OnServerInvoke
     ReplicatedStorage.Remotes.ToggleAFK.OnServerEvent:Connect(OnServerEvent)
     Players.PlayerAdded:Connect(PlayerAdded)
 
     MarketplaceService.ProcessReceipt = PurchaseService.ProcessReceipt
 
-    Networker.server.new("ToolInputs", DistributeTool, {
-        DistributeTool.Block,
-        DistributeTool.SpecialAttack,
-        DistributeTool.Information,
-        DistributeTool.Sparkle
+    Networker.server.new("ToolInputs", Initialize, {
+        Initialize.Block,
+        Initialize.SpecialAttack,
+        Initialize.Information,
+        Initialize.Sparkle
     })
 
-    Networker.server.new("Shop", DistributeTool, {
-        DistributeTool.DisplayItem,
-        DistributeTool.UnlockSmacker,
-        DistributeTool.HasUnlockedSmacker
+    Networker.server.new("Shop", Initialize, {
+        Initialize.DisplayItem,
+        Initialize.UnlockSmacker,
+        Initialize.HasUnlockedSmacker
     })
 
     for _, Player in Players:GetPlayers() do
@@ -214,4 +226,4 @@ function DistributeTool.Init()
     end)
 end
 
-return DistributeTool
+return Initialize
