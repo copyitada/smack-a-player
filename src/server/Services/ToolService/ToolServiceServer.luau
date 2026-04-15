@@ -170,28 +170,34 @@ function ToolService.InitializeSmacker(Player : Player, Tool)
                                 Hitbox.Color = Color3.fromRGB(0,255,0)
 
                                 HumanoidDebounce[VictimHumanoid] = true
-                                OnHit(Player, HitCharacter, Result.Instance, AnimTrack, Smacks)
+                                task.spawn(OnHit, Player, HitCharacter, Result.Instance, AnimTrack, Smacks)
                             end
                         end
                     end
+                else
+                    local OverlapParams = OverlapParams.new()
+                    OverlapParams.FilterDescendantsInstances = {Tool, Character}
+                    OverlapParams.FilterType = Enum.RaycastFilterType.Exclude
+
+                    local Hits = workspace:GetPartBoundsInBox(
+                        Part.CFrame,
+                        Part.Size + Vector3.new(1.5,1.5,1.5),
+                        OverlapParams
+                    )
                     
-
-                    -- local Hits = workspace:GetPartsInPart(Part, RaycastParams)
-
-                    --[[
                     for _, Hit in Hits do
                         local VictimHumanoid = Hit.Parent:FindFirstChild("Humanoid")
-                        if not VictimHumanoid then return end
+                        if not VictimHumanoid then continue end
 
                         local VictimCharacter = VictimHumanoid.Parent
-                        if VictimCharacter.Name == Character.Name then return end
+                        if VictimCharacter.Name == Character.Name then continue end
 
-                        if HumanoidDebounce[VictimHumanoid] then return end
+                        if HumanoidDebounce[VictimHumanoid] then continue end
                         HumanoidDebounce[VictimHumanoid] = true
 
-                        OnHit(Player, VictimCharacter, Hit, AnimTrack, Smacks)
+                        Hitbox.Color = Color3.fromRGB(0,255,0)
+                        task.spawn(OnHit, Player, VictimCharacter, Hit, AnimTrack, Smacks)
                     end
-                    ]]
                 end
 
                 PreviousCFrames[Part] = CurrentCFrame
