@@ -4,11 +4,11 @@ local Platform = ServerStorage:FindFirstChild("Platform")
 
 -- script update
 
-local Default = {}
+local Build = {}
 
 local SpecialAttackDebounces = {}
 
-Default.AttackFunction = function(Player : Player)
+Build.AttackFunction = function(Player : Player)
     local Character = Player.Character
     local Humanoid = Character:FindFirstChild("Humanoid")
     if not Humanoid then return false end
@@ -31,7 +31,7 @@ Default.AttackFunction = function(Player : Player)
     end)
         
     local Clone = Platform:Clone()
-    Clone.Parent = workspace
+    Clone.Parent = workspace.StreamParts
     Clone.Position = Character:GetPivot().Position + Vector3.new(0,-3,0)
 
     for _, Trail in PrimaryPart:GetChildren() do
@@ -51,4 +51,4 @@ Default.AttackFunction = function(Player : Player)
     return true
 end
 
-return Default
+return Build

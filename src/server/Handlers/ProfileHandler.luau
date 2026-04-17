@@ -18,7 +18,6 @@ local function Initialize(Player : Player, Profile: typeof(PlayerStore:StartSess
    local Values = Player:FindFirstChild("Values")
    local SmackerName = Values:FindFirstChild("SmackerName")
 
-
    print(Profile.Data)
 
    if leaderstats then

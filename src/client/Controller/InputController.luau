@@ -9,9 +9,11 @@ type Smacker = {
 
 local InputController = {}
 
+local CurrentTool
 local RenderConnection
 
 local ContextActionService = game:GetService("ContextActionService")
+local Debris = game:GetService("Debris")
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local RunService = game:GetService("RunService")
@@ -51,14 +53,150 @@ local CooldownBarRaw = ReplicatedStorage:FindFirstChild("CooldownBar")
 local MoneyUI = PlayerUI.ToolUI.SidePanel.Money
 
 local IsDead = false
+local ToolDebounce = false
 local AbilityDebounce = false
 
 local Networker = require(ReplicatedStorage.Packages.Networker)
+local ToolServiceUtils = require(ReplicatedStorage.Shared.Services.ToolService.ToolServiceUtils)
 local SpecialAttackDebounce = false
 
 local function GetSmackerInfo() : Smacker
     local Information = Networker.client.new("ToolInputs", InputController):fetch("Information")
     return Information
+end
+
+local function InitializeClientSmacker(Tool : Tool)
+    local PrimaryPart = Tool.PrimaryPart
+    local Heartbeat
+    local HumanoidDebounce = {}
+    local PreviousCFrames = {}
+
+    local SmackAnimation : Animation = Instance.new("Animation")
+    SmackAnimation.Name = "SmackAnimation"
+    SmackAnimation.Parent = Tool
+    SmackAnimation.AnimationId = "rbxassetid://136511099213466"
+    if Tool.Name == "Whip" then
+        SmackAnimation.AnimationId = "rbxassetid://110904704122106"
+    end
+
+    local AnimTrack = Humanoid.Animator:LoadAnimation(SmackAnimation)
+
+    local function DoHitScan()
+        local Parts = {}
+
+        if PrimaryPart then
+            table.insert(Parts, PrimaryPart)
+        else
+            for _, Object in Tool:GetDescendants() do
+                if Object.Name == "Handle" then continue end
+                if not Object:IsA("BasePart") then continue end
+                table.insert(Parts, Object)
+            end
+        end
+
+        for _, Part in Parts do
+            local Hitbox = Instance.new("Part")
+            Hitbox.Color = Color3.fromRGB(255, 0, 0)
+            Hitbox.CanCollide = false
+            Hitbox.Anchored = true
+            Hitbox.Material = Enum.Material.ForceField
+            Hitbox.Transparency = RunService:IsStudio() and .5 or 1
+            Hitbox.CFrame = Part.CFrame
+            Hitbox.Size = Part.Size + Vector3.new(1.5, 1.5, 1.5)
+            Hitbox.Parent = workspace
+
+            Debris:AddItem(Hitbox, 1)
+
+            local CurrentCFrame = Part.CFrame
+            local PreviousCFrame = PreviousCFrames[Part]
+
+            if PreviousCFrame then
+                local RaycastParams = RaycastParams.new()
+                RaycastParams.FilterDescendantsInstances = {Tool, Character}
+                RaycastParams.FilterType = Enum.RaycastFilterType.Exclude
+                    
+                local Direction = (CurrentCFrame.Position - PreviousCFrame.Position)
+
+                if Direction.Magnitude > .01 then
+                    for _ = 1, 10 do
+                        task.spawn(function()
+                            local Result = workspace:Shapecast(Part, Direction, RaycastParams)
+
+                            if Result then
+                                local HitCharacter = Result.Instance.Parent
+                                local VictimHumanoid = HitCharacter:FindFirstChild("Humanoid")
+
+                                if VictimHumanoid and HitCharacter ~= Character and not HumanoidDebounce[VictimHumanoid] then
+                                    Hitbox.Color = Color3.fromRGB(0,255,0)
+
+                                    HumanoidDebounce[VictimHumanoid] = true
+                                    Networker.client.new("ToolInputs", InputController):fire("HitDetected", HitCharacter, tick())
+                                end
+                            end
+                        end)
+                    end
+                end
+            else
+                local OverlapParams = OverlapParams.new()
+                OverlapParams.FilterDescendantsInstances = {Tool, Character}
+                OverlapParams.FilterType = Enum.RaycastFilterType.Exclude
+
+                local Hits = workspace:GetPartBoundsInBox(
+                    Part.CFrame,
+                    Part.Size + Vector3.new(1.5,1.5,1.5),
+                    OverlapParams
+                )
+                    
+                for _, Hit in Hits do
+                    local VictimHumanoid = Hit.Parent:FindFirstChild("Humanoid")
+                    if not VictimHumanoid then continue end
+
+                    local VictimCharacter = VictimHumanoid.Parent
+                    if VictimCharacter.Name == Character.Name then continue end
+
+                    if HumanoidDebounce[VictimHumanoid] then continue end
+                    HumanoidDebounce[VictimHumanoid] = true
+
+                    Hitbox.Color = Color3.fromRGB(0,255,0)
+                    Networker.client.new("ToolInputs", InputController):fire("HitDetected", VictimCharacter, tick())
+                end
+            end
+
+            PreviousCFrames[Part] = CurrentCFrame
+        end
+    end
+
+    Tool.Activated:Connect(function()
+        if ToolDebounce then return end
+        if not Character then return end
+
+        if Character:FindFirstChild("Stunned") then return end
+        if Character:FindFirstChild("Blocking") then return end
+
+        if not Humanoid then return end
+        if Humanoid.Health <= 0 then return end
+
+        if not ToolServiceUtils.IsHoldingTool(Character) then return end
+
+        HumanoidDebounce = {}
+        PreviousCFrames = {}
+
+        ToolDebounce = true
+
+        AnimTrack:Play()
+        AnimTrack:GetMarkerReachedSignal("Hit"):Wait()
+
+        Heartbeat = RunService.Heartbeat:Connect(function()
+            task.spawn(DoHitScan)
+        end)
+
+        AnimTrack.Ended:Wait()
+        ToolDebounce = false
+
+        if Heartbeat then
+            Heartbeat:Disconnect()
+        end
+    end)
 end
 
 local function SpecialAttack()
@@ -231,25 +369,38 @@ local function IsPlayerInfront(Character1, Character2)
     return Character1:GetPivot().LookVector:Dot(Direction) > .45, Direction
 end
 
-local function CharacterAdded(NewCharacter)
-    Character = NewCharacter
-    Head = NewCharacter:WaitForChild("Head")
-    Humanoid = NewCharacter:WaitForChild("Humanoid")
-    RootPart = NewCharacter:WaitForChild("HumanoidRootPart")
+local function CharacterAdded()
 
     Camera.CameraType = Enum.CameraType.Custom
     Camera.CameraSubject = Humanoid
 
-    IsDead = false
+    -- IsDead = false
 
+    --[[
     Humanoid.Died:Connect(function()
         print("player died")
         IsDead = true
     end)
+    ]]
 
     for _, Frame in CooldownList:GetChildren() do
         if Frame:IsA("Frame") then
             Frame:Destroy()
+        end
+    end
+
+    Character.ChildAdded:Connect(function(Child)
+        if CurrentTool and Child == CurrentTool then return end
+        if Child:IsA("Tool") then
+            CurrentTool = Child
+            InitializeClientSmacker(Child)
+        end
+    end)
+
+    for _, Child in Character:GetChildren() do
+        if Child == CurrentTool then continue end
+        if Child:IsA("Tool") then
+            InitializeClientSmacker(Child)
         end
     end
 
@@ -285,7 +436,7 @@ function InputController.Init()
     ContextActionService:SetTitle("SpecialAttack", "Ability")
     ContextActionService:SetPosition("SpecialAttack", UDim2.fromScale(.58, -.1))
 
-    Player.CharacterAdded:Connect(CharacterAdded)
+    task.spawn(CharacterAdded)
 
     if not Loaded.Value then
         MoneyUI.Text = "$0"

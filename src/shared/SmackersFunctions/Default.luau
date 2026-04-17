@@ -20,7 +20,7 @@ Default.AttackFunction = function(Player : Player)
 
     local Animation = Instance.new("Animation")
     Animation.Name = "SpecialAttack"
-    Animation.AnimationId = "rbxassetid://83138996215724"
+    Animation.AnimationId = "rbxassetid://77243661129648"
 
     local AnimTrack : AnimationTrack  = Humanoid.Animator:LoadAnimation(Animation)
     local Tool = Player.Backpack:FindFirstChild("Default") or Character:FindFirstChild("Default")

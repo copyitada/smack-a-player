@@ -1,14 +1,8 @@
-local Debris = game:GetService("Debris")
-local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
-local RunService = game:GetService("RunService")
 local ServerScriptService = game:GetService("ServerScriptService")
 local ServerStorage = game:GetService("ServerStorage")
 local ToolServiceUtils = require(ReplicatedStorage.Shared.Services.ToolService.ToolServiceUtils)
 local DataManager = require(ServerScriptService.Server.Modules.DataManager)
-local CombatServiceServer = require(ServerScriptService.Server.Services.CombatService.CombatServiceServer)
-local KnockbackServiceServer = require(ServerScriptService.Server.Services.KnockbackService.KnockbackServiceServer)
-local ValueServiceServer = require(ServerScriptService.Server.Services.ValueService.ValueServiceServer)
 
 local SwingSound = ServerStorage:FindFirstChild("swing")
 
@@ -16,69 +10,10 @@ local ToolDebounces = {}
 
 local ToolService = {}
 
-local function OnHit(Player, VictimCharacter, Hit, AnimTrack, Smacks)
-    local VictimHumanoid = Hit.Parent:FindFirstChild("Humanoid")
-    if not VictimHumanoid then return end
-
-    if VictimCharacter.Name == Player.Character.Name then return end
-
-    local VictimPlayer = Players:GetPlayerFromCharacter(VictimCharacter)
-
-    local SmackerInformation = ToolServiceUtils.GetInformation(Player)
-    local Blocking = VictimCharacter:FindFirstChild("Blocking")
-                
-    if Blocking then
-        CombatServiceServer.Parried(Player, Hit, AnimTrack)
-
-        return
-    end
-
-    if SmackerInformation.Smack.Hit then
-        SmackerInformation.Smack.Hit(Player, VictimCharacter)
-    end
-                
-    ReplicatedStorage.Remotes.ShakeOnce:FireClient(Player, 5, 10, .1, .4)
-
-    VictimCharacter.RagdollTrigger.Value = true
-
-    local Damage = SmackerInformation.Smack.Damage
-    if typeof(Damage) == "function" then
-        Damage = SmackerInformation.Smack.Damage()
-    end
-    VictimHumanoid:TakeDamage(Damage)
-
-    Smacks.Value += 1
-    DataManager.AddSmacks(Player)
-
-    if VictimPlayer then
-        local PlayerValues = ValueServiceServer.GetValues(VictimPlayer)
-        PlayerValues.Attacker.Value = Player.Name
-    end
-
-    local KnockbackSpeed = SmackerInformation.Smack.KnockbackSpeed
-    local KnockbackUp = SmackerInformation.Smack.KnockbackUp
-                
-    if typeof(KnockbackSpeed) == "function" then
-        KnockbackSpeed = require(ReplicatedStorage.Shared.Services.ToolService.ToolServiceUtils).GetInformation(Player).Smack.KnockbackSpeed()
-    end
-    if typeof(KnockbackUp) == "function" then
-        KnockbackUp = require(ReplicatedStorage.Shared.Services.ToolService.ToolServiceUtils).GetInformation(Player).Smack.KnockbackUp()
-    end
-
-    KnockbackServiceServer.Apply(VictimCharacter:FindFirstChild("HumanoidRootPart"), Player.Character, KnockbackSpeed, KnockbackUp)
-
-    task.delay(1.5, function()
-        VictimCharacter.RagdollTrigger.Value = false
-    end)
-end
-
 function ToolService.InitializeSmacker(Player : Player, Tool)
     local Character = Player.Character or Player.CharacterAdded:Wait()
     local Humanoid = Character:FindFirstChild("Humanoid")
     local Animator : Animator = Humanoid:FindFirstChild("Animator")
-
-    local Values = Player:FindFirstChild("Values")
-    local Smacks = Values.RoundStats:FindFirstChild("Smacks")
 
     local SmackerInformation = ToolServiceUtils.GetInformation(Player)
 
@@ -110,8 +45,6 @@ function ToolService.InitializeSmacker(Player : Player, Tool)
             end)
         end
 
-        local HumanoidDebounce = {}
-
         if ToolDebounces[Humanoid] then return end
         ToolDebounces[Humanoid] = true
 
@@ -121,6 +54,7 @@ function ToolService.InitializeSmacker(Player : Player, Tool)
         AnimTrack:GetMarkerReachedSignal("Hit"):Wait()
         AnimTrack:AdjustSpeed(Tool.Name == "Tank" and 2 or SmackerInformation.Smack.AnimationSpeed)
 
+        --[[
         local PreviousCFrames = {}
 
         local function DoHitScan()
@@ -207,6 +141,7 @@ function ToolService.InitializeSmacker(Player : Player, Tool)
         local Heartbeat = RunService.Heartbeat:Connect(function()
             DoHitScan()
         end)
+        ]]
 
         if Tool.Name == "Whip" then
             for i, Segment in Tool.Segment:GetChildren() do
@@ -237,7 +172,7 @@ function ToolService.InitializeSmacker(Player : Player, Tool)
         SwingCloneSound:Play()
 
         AnimTrack.Ended:Wait()
-        Heartbeat:Disconnect()
+        -- Heartbeat:Disconnect()
 
         for _, Trail in Tool:GetDescendants() do
             if Trail:IsA("Trail") then

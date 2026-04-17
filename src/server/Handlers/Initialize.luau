@@ -20,6 +20,7 @@ local ShopServiceClient = require(ReplicatedStorage.Shared.Services.ShopService.
 local ToolServiceUtils = require(ReplicatedStorage.Shared.Services.ToolService.ToolServiceUtils)
 local ToolDebounces = {}
 local DeathDebounce = {}
+local DeadCharacters = {}
 
 local RawValues = ServerStorage:FindFirstChild("Values")
 
@@ -36,6 +37,8 @@ local function PlayerAdded(Player : Player)
     Player.Team = Teams.Lobby
 
     Player.CharacterAdded:Connect(function(Character)
+        DeadCharacters[Player] = nil
+
         task.wait()
         Attacker.Value = ""
 
@@ -56,6 +59,9 @@ local function PlayerAdded(Player : Player)
 
         if Humanoid then
             Humanoid.Died:Connect(function()
+                if DeadCharacters[Player] then return end
+                DeadCharacters[Player] = true
+
                 local AttackerPlayer
                 local AttackerValues
 
@@ -76,13 +82,6 @@ local function PlayerAdded(Player : Player)
 
                 local AttackerKills = AttackerRoundStats:FindFirstChild("Kills")
                 if not AttackerKills then return end
-
-                if DeathDebounce[Player] then return end
-
-                DeathDebounce[Player] = true
-                task.delay(2.5, function()
-                    DeathDebounce[Player] = nil
-                end)
 
                 if AttackerPlayer.Team == Teams.Playing and Player.Team == Teams.Playing then
                     ReplicatedStorage.Remotes.ShowKilled:FireAllClients(AttackerPlayer, Player)
@@ -132,6 +131,12 @@ function OnServerEvent(Player : Player, Enable)
     Values.AFK.Value = Enable or not Values.AFK.Value
 end
 
+function Initialize:HitDetected(Player : Player, VictimCharacter, Timestamp)
+    if not ToolServiceServer.CheckEligibility(Player) then return end
+
+    CombatServiceServer.HitDetected(Player, VictimCharacter, Timestamp)
+end
+
 function Initialize:Block(Player : Player)
     local Success, _Humanoid = ToolServiceServer.CheckEligibility(Player)
 
@@ -149,8 +154,6 @@ function Initialize:UpdatePosition(Player : Player, CFrame)
     if not HumanoidRootPart then return end
 
     if (HumanoidRootPart.Position - CFrame.Posiiton).Magnitude > 10 then return end
-
-    
 end
 
 function Initialize:SpecialAttack(Player)
@@ -203,6 +206,7 @@ function Initialize.Init()
     MarketplaceService.ProcessReceipt = PurchaseService.ProcessReceipt
 
     Networker.server.new("ToolInputs", Initialize, {
+        Initialize.HitDetected,
         Initialize.Block,
         Initialize.SpecialAttack,
         Initialize.Information,

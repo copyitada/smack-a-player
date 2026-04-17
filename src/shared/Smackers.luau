@@ -550,7 +550,7 @@ return {
                 Description = "Johnny is building a nice platform, I wonder what's gonna happen to Johnny.",
                 Ability = {
                     Title = "Construct",
-                    Description = "Make a circle-shaped platform that lasts for 10 seconds, tower up to the lobby yo!"
+                    Description = "Make a circle-shaped platform that lasts until the round ends, tower up to the lobby yo!"
                 },
                 Damage = "7",
                 KnockbackSpeed = "30",
