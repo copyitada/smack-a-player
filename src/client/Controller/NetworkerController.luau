@@ -24,6 +24,7 @@ CameraShake:Start()
 
 function NetworkerController.Init()
     ReplicatedStorage.Remotes.ShakeOnce.OnClientEvent:Connect(function(magnitude, roughness, fadeInTime, fadeOutTime, posInfluence, rotInfluence)
+        if not Player.Values.Settings["Camera Shake"].Value then return end
         CameraShake:ShakeOnce(magnitude, roughness, fadeInTime, fadeOutTime, posInfluence, rotInfluence)
     end)
 

@@ -84,9 +84,9 @@ return {
             }
         },
         Smack = {
-            Damage = 7,
-            KnockbackSpeed = 30,
-            KnockbackUp = 15,
+            Damage = 10,
+            KnockbackSpeed = 40,
+            KnockbackUp = 20,
             AnimationSpeed = 1,
             Hit = function(AttackerPlayer : Player, VictimCharacter)
                 local VictimPlayer = Players:GetPlayerFromCharacter(VictimCharacter)
@@ -184,6 +184,7 @@ return {
             AttackDebounce = 40,
         }
     },
+    --[[
     {
         SmackerName = "Mini",
         Shop = {
@@ -211,6 +212,7 @@ return {
             AttackDebounce = 5,
         }
     },
+    ]]
     {
         SmackerName = "Fire",
         Shop = {
@@ -435,6 +437,38 @@ return {
         },
     },
     {
+        SmackerName = "Familiar Bat",
+        Shop = {
+            Price = 900,
+            Information = {
+                Description = "The thing from that one tung tung thing. Have you seen this \"smacker\" in the past?",
+                Ability = {
+                    Title = "Bonk",
+                    Description = "Do the funny bonk with your bat."
+                },
+                Damage = "8",
+                KnockbackSpeed = "25",
+                KnockbackUp = "10",
+                Caption = {
+                    Text = "NEW!!!",
+                    Color = Color3.fromRGB(255, 0, 0)
+                }
+            }
+        },
+        Smack = {
+            Damage = 8,
+            KnockbackSpeed = 25,
+            KnockbackUp = 10,
+            AnimationSpeed = 1,
+            AnimationId = "rbxassetid://110904704122106",
+        },
+        Attack = {
+            AttackName = "Bonk",
+            AttackDuration = 2,
+            AttackDebounce = 10,
+        }
+    },
+    {
         SmackerName = "Landmine",
         Shop = {
             Price = 1000,
@@ -508,6 +542,7 @@ return {
             KnockbackSpeed = 30,
             KnockbackUp = 15,
             AnimationSpeed = 1,
+            AnimationId = "rbxassetid://110904704122106"
         },
         Attack = {
             AttackName = "Big Whip",
@@ -555,10 +590,6 @@ return {
                 Damage = "7",
                 KnockbackSpeed = "30",
                 KnockbackUp = "15",
-                Caption = {
-                    Text = "NEW!!!",
-                    Color = Color3.fromRGB(0, 247, 255)
-                }
             }
         },
         Smack = {
@@ -596,6 +627,47 @@ return {
         },
         Attack = {
             AttackName = "Reflect",
+            AttackDuration = 2,
+            AttackDebounce = 10,
+        }
+    },
+    {
+        SmackerName = "Lifesteal",
+        Shop = {
+            Price = 4000,
+            Information = {
+                Description = "Lifestealers steals lives, lives steals lifestealers.",
+                Ability = {
+                    Title = "Lifesteal",
+                    Description = "[PASSIVE] Steal 3 HP on every smack."
+                },
+                Damage = "8",
+                KnockbackSpeed = "30",
+                KnockbackUp = "15",
+                Caption = {
+                    Text = "NEW!!!",
+                    Color = Color3.fromRGB(255, 0, 0)
+                }
+            }
+        },
+        Smack = {
+            Damage = 8,
+            KnockbackSpeed = 30,
+            KnockbackUp = 15,
+            AnimationSpeed = 1,
+            Hit = function(AttackerPlayer : Player, VictimCharacter)
+                local AttackerCharacter = AttackerPlayer.Character
+                local AttackerHumanoid = AttackerCharacter:FindFirstChild("Humanoid")
+                if not AttackerHumanoid then return end
+
+                local VictimHumanoid = VictimCharacter:FindFirstChild("Humanoid")
+                if not VictimHumanoid then return end
+
+                AttackerHumanoid.Health += 3
+            end
+        },
+        Attack = {
+            AttackName = "Smash",
             AttackDuration = 2,
             AttackDebounce = 10,
         }

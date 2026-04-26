@@ -3,6 +3,7 @@ local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local ServerScriptService = game:GetService("ServerScriptService")
 local ServerStorage = game:GetService("ServerStorage")
+local SoundService = game:GetService("SoundService")
 local TweenService = game:GetService("TweenService")
 local DataManager = require(ServerScriptService.Server.Modules.DataManager)
 local KnockbackServiceServer = require(ServerScriptService.Server.Services.KnockbackService.KnockbackServiceServer)
@@ -202,7 +203,7 @@ function CombatServiceServer.Parry(Player : Player, Block : boolean?)
     end)
 end
 
-function CombatServiceServer.Parried(Player : Player, Hit, SmackAnimationTrack : AnimationTrack)
+function CombatServiceServer.Parried(Player : Player, Hit, SmackAnimationTrack)
     local Character = Player.Character
     local Humanoid = Character:FindFirstChild("Humanoid")
 
@@ -214,6 +215,7 @@ function CombatServiceServer.Parried(Player : Player, Hit, SmackAnimationTrack :
     local ParrySound : Sound = Instance.new("Sound")
     ParrySound.SoundId = "rbxassetid://7058511852"
     ParrySound.Parent = Character.PrimaryPart
+    ParrySound.SoundGroup = SoundService.Master.SFX
 
     ParrySound:Play()
 

@@ -208,9 +208,15 @@ function RoundServiceServer.Start()
     RoundServiceUtils.ActionToAllPlayers(function(Player : Player)
         local Character = Player.Character or Player.CharacterAdded:Wait()
         Character.PrimaryPart.Anchored = false
+
+        local Humanoid = Character:FindFirstChild("Humanoid")
+
+        if Humanoid then
+            Humanoid.WalkSpeed = 16
+        end
     end)
 
-    local MatchSongs = SoundService:GetChildren()
+    local MatchSongs = SoundService.Master.Music:GetChildren()
     MatchSongs[math.random(1, #MatchSongs)]:Play()
 
     Caption.Value = "Game ends in:"

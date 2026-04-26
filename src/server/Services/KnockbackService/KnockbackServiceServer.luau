@@ -7,6 +7,7 @@ local KnockbackService = {}
 
 local Debris = game:GetService("Debris")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local SoundService = game:GetService("SoundService")
 local ToolServiceUtils = require(ReplicatedStorage.Shared.Services.ToolService.ToolServiceUtils)
 
 function KnockbackService.Apply(RootPart, AttackerCharacter : Model, KnockbackSpeed : number?, KnockbackUp: number?)
@@ -54,6 +55,7 @@ function KnockbackService.Apply(RootPart, AttackerCharacter : Model, KnockbackSp
 
     local CloneSound : Sound = SmackSound:Clone()
     CloneSound.Parent = Parent
+    CloneSound.SoundGroup = SoundService.Master.SFX
     CloneSound:Play()
 
     Debris:AddItem(CloneSound, 1)

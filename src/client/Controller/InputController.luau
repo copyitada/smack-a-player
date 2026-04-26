@@ -36,7 +36,6 @@ local Spectating = Values:WaitForChild("Spectating")
 
 local LastTime = 0
 
-local Loaded = Player:WaitForChild("Values"):WaitForChild("Loaded")
 local ParryCooldown = Player:WaitForChild("Values"):WaitForChild("ParryCooldown")
 local PlayerUI = Player.PlayerGui
 
@@ -77,6 +76,8 @@ local function InitializeClientSmacker(Tool : Tool)
     SmackAnimation.AnimationId = "rbxassetid://136511099213466"
     if Tool.Name == "Whip" then
         SmackAnimation.AnimationId = "rbxassetid://110904704122106"
+    elseif Tool.Name == "Familiar Bat" then
+        SmackAnimation.AnimationId = "rbxassetid://106635813946827"
     end
 
     local AnimTrack = Humanoid.Animator:LoadAnimation(SmackAnimation)
@@ -100,7 +101,7 @@ local function InitializeClientSmacker(Tool : Tool)
             Hitbox.CanCollide = false
             Hitbox.Anchored = true
             Hitbox.Material = Enum.Material.ForceField
-            Hitbox.Transparency = RunService:IsStudio() and .5 or 1
+            Hitbox.Transparency = Player.Values.Settings["Attack Hitboxes"].Value and .5 or 1
             Hitbox.CFrame = Part.CFrame
             Hitbox.Size = Part.Size + Vector3.new(1.5, 1.5, 1.5)
             Hitbox.Parent = workspace
@@ -313,14 +314,6 @@ local function RenderStepped()
         IsDead = false
     end
 
-    if not Humanoid.Parent:FindFirstChild("Blocking") and not Humanoid.Parent:FindFirstChild("Stunned") then
-        if UserInputService:IsKeyDown(Enum.KeyCode.W) then
-            Humanoid.WalkSpeed = 20
-        else
-            Humanoid.WalkSpeed = 16
-        end
-    end
-
     if TimerValue.Value <= 3 then
         TimerUI.TextColor3 = Color3.fromRGB(255,0,0)
     else
@@ -360,13 +353,6 @@ local function RenderStepped()
         Camera.CFrame = Camera.CFrame:Lerp(TargetCFrame, 0.1)
         LastHeadCFrame = Head.CFrame
     end
-end
-
-local function IsPlayerInfront(Character1, Character2)
-    local Direction = (Character1:GetPivot().Position - Character2:GetPivot().Position).Unit
-    print(Direction)
-
-    return Character1:GetPivot().LookVector:Dot(Direction) > .45, Direction
 end
 
 local function CharacterAdded()
@@ -411,12 +397,6 @@ local function CharacterAdded()
     if Head then
         LastHeadCFrame = Head.CFrame
     end
-
-    for _, VictimCharacter in workspace:GetDescendants() do
-        if not Character:FindFirstChild("Humanoid") then continue end
-        if VictimCharacter == Character then continue end
-        IsPlayerInfront(Character, VictimCharacter)
-    end 
 end
 
 function InputController.Init()
@@ -438,12 +418,13 @@ function InputController.Init()
 
     task.spawn(CharacterAdded)
 
-    if not Loaded.Value then
-        MoneyUI.Text = "$0"
-    end
+    task.spawn(function()
+        repeat task.wait()
+            MoneyUI.Text = "$" .. Player.leaderstats.Smacks.Value
+        until Player.Values.Loaded.Value
+    end)
 
     Player:WaitForChild("leaderstats").Smacks:GetPropertyChangedSignal("Value"):Connect(function()
-        Loaded.Value = true
         MoneyUI.Text = "$" .. Player.leaderstats.Smacks.Value
         -- MoneyUI.TextColor3 = Color3.fromRGB(255, 255, 0)
     end)

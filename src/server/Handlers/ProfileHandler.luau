@@ -26,6 +26,7 @@ local function Initialize(Player : Player, Profile: typeof(PlayerStore:StartSess
    if SmackerName then
       SmackerName.Value = Profile.Data.SmackerName  
    end
+   Values.Loaded.Value = true
 end
 
 local function PlayerAdded(Player)

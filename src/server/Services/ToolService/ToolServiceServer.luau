@@ -13,12 +13,10 @@ local ToolService = {}
 function ToolService.InitializeSmacker(Player : Player, Tool)
     local Character = Player.Character or Player.CharacterAdded:Wait()
     local Humanoid = Character:FindFirstChild("Humanoid")
-    local Animator : Animator = Humanoid:FindFirstChild("Animator")
-
-    local SmackerInformation = ToolServiceUtils.GetInformation(Player)
 
     local PrimaryPart = Tool:FindFirstChild("EvadeTaxes")
 
+    --[[
     local SmackAnimation : Animation = Instance.new("Animation")
     SmackAnimation.Name = "SmackAnimation"
     SmackAnimation.Parent = Tool
@@ -26,8 +24,10 @@ function ToolService.InitializeSmacker(Player : Player, Tool)
     if Tool.Name == "Whip" then
         SmackAnimation.AnimationId = "rbxassetid://110904704122106"
     end
+    
 
     local AnimTrack = Animator:LoadAnimation(SmackAnimation)
+    ]]
 
     Tool.Activated:Connect(function()
         if not ToolService.CheckEligibility(Player) then return end
@@ -48,13 +48,13 @@ function ToolService.InitializeSmacker(Player : Player, Tool)
         if ToolDebounces[Humanoid] then return end
         ToolDebounces[Humanoid] = true
 
+        --[[
         AnimTrack:Play()
         AnimTrack:AdjustSpeed(SmackerInformation.Smack.AnimationSpeed)
 
         AnimTrack:GetMarkerReachedSignal("Hit"):Wait()
         AnimTrack:AdjustSpeed(Tool.Name == "Tank" and 2 or SmackerInformation.Smack.AnimationSpeed)
 
-        --[[
         local PreviousCFrames = {}
 
         local function DoHitScan()
@@ -171,8 +171,9 @@ function ToolService.InitializeSmacker(Player : Player, Tool)
         SwingCloneSound.Parent = Character:FindFirstChild("HumanoidRootPart")
         SwingCloneSound:Play()
 
-        AnimTrack.Ended:Wait()
+        -- AnimTrack.Ended:Wait()
         -- Heartbeat:Disconnect()
+        task.wait(.5)
 
         for _, Trail in Tool:GetDescendants() do
             if Trail:IsA("Trail") then

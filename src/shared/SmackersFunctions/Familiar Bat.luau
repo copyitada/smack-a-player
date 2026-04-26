@@ -1,0 +1,126 @@
+local Debris = game:GetService("Debris")
+local Players = game:GetService("Players")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local ServerScriptService = game:GetService("ServerScriptService")
+local ServerStorage = game:GetService("ServerStorage")
+local CombatServiceServer = require(ServerScriptService.Server.Services.CombatService.CombatServiceServer)
+local ValueServiceServer = require(ServerScriptService.Server.Services.ValueService.ValueServiceServer)
+
+-- script update
+
+local Bat = {}
+local BonkSound = ServerStorage:FindFirstChild("bonk")
+
+local SpecialAttackDebounces = {}
+
+Bat.AttackFunction = function(Player : Player)
+    local Character = Player.Character
+    local Humanoid = Character:FindFirstChild("Humanoid")
+    if not Humanoid then return false end
+
+    local Animation = Instance.new("Animation")
+    Animation.Name = "SpecialAttack"
+    Animation.AnimationId = "rbxassetid://102112993053420"
+
+    local AnimTrack : AnimationTrack  = Humanoid.Animator:LoadAnimation(Animation)
+    local Tool = Player.Backpack:FindFirstChild("Familiar Bat") or Character:FindFirstChild("Familiar Bat")
+
+    local TouchConnection
+    local PrimaryPart = Tool:FindFirstChild("EvadeTaxes")
+
+    for _, Trail in PrimaryPart:GetChildren() do
+        if Trail:IsA("Trail") then
+            Trail.Transparency = NumberSequence.new(.7, .7)
+        end
+    end
+
+    local HumanoidDebounce = {}
+    if SpecialAttackDebounces[Humanoid] then return false end
+    SpecialAttackDebounces[Humanoid] = true
+
+    task.delay(10, function()
+        SpecialAttackDebounces[Humanoid] = nil
+    end)
+
+    AnimTrack:Play()
+    AnimTrack:GetMarkerReachedSignal("Hit"):Wait()
+
+    TouchConnection = PrimaryPart.Touched:Connect(function(Hit)
+        local VictimHumanoid = Hit.Parent:FindFirstChild("Humanoid")
+        if not VictimHumanoid then return end
+        local VictimCharacter = VictimHumanoid.Parent
+
+        if VictimCharacter.Name == Character.Name then return end
+        VictimCharacter.RagdollTrigger.Value = true
+
+        local VictimPlayer = Players:GetPlayerFromCharacter(VictimCharacter)
+
+        if HumanoidDebounce[VictimHumanoid] then return end
+        
+        HumanoidDebounce[VictimHumanoid] = true
+
+        local Params = RaycastParams.new()
+        Params.FilterDescendantsInstances = {VictimCharacter}
+        Params.FilterType = Enum.RaycastFilterType.Exclude
+
+        local Results = workspace:Raycast(VictimCharacter:GetPivot().Position + Vector3.new(0, 10, 0), Vector3.new(0, -999999, 0), Params)
+
+        for _ = 1, 50 do
+            local Debree : BasePart = Instance.new("Part")
+            Debree.Size = Vector3.new(.7, .7, .7)
+            Debree.Rotation = Vector3.new(math.random(-180, 180), math.random(-180, 180), math.random(-180, 180))
+            Debree.Anchored = false
+            Debree.Position = VictimCharacter:GetPivot().Position + Vector3.new(math.random(-2, 2), 10, math.random(-2, 2))
+            Debree.Parent = workspace.VFX.Debris
+
+            if Results then
+                Debree.Material = Results.Material
+                Debree.Color = Results.Instance.Color
+            else
+                Debree.Material = Enum.Material.Neon
+                Debree.Color = Color3.fromRGB(255,255,255)
+            end
+
+            Debree:ApplyImpulse(Vector3.new(math.random(-5, 5), 20, math.random(-5, 5)))
+            Debris:AddItem(Debree, 10)
+        end
+
+        VictimHumanoid:TakeDamage(35)
+
+        if VictimPlayer then
+            local PlayerValues = ValueServiceServer.GetValues(VictimPlayer)
+            PlayerValues.Attacker.Value = Player.Name
+
+            CombatServiceServer.Parried(VictimPlayer, Hit)
+        end
+
+        local BonkSoundClone : Sound = BonkSound:Clone()
+        BonkSoundClone.Parent = Hit
+        BonkSoundClone:Play()
+
+        task.delay(2.5, function()
+            VictimCharacter.RagdollTrigger.Value = false
+        end)
+    end)
+
+    AnimTrack.Ended:Wait()
+
+    TouchConnection:Disconnect()
+    for _, Trail in PrimaryPart:GetChildren() do
+        if Trail:IsA("Trail") then
+            Trail.Lifetime = .1
+        end
+    end
+
+    task.wait(.1)
+    for _, Trail in PrimaryPart:GetChildren() do
+        if Trail:IsA("Trail") then
+            Trail.Transparency = NumberSequence.new(1, 1)
+        end
+    end
+    
+    task.wait()
+    return true
+end
+
+return Bat
